@@ -2,20 +2,25 @@ import sbt.project
 
 lazy val Versions = new {
   val App = "0.1-SNAPSHOT"
-  val LogBack = "1.1.6"
+  val LogBack = "1.2.3"
   val Scala = "2.12.4"
   val ScalaMajor = "2.12"
   val ScalaTest = "3.0.0"
+  val ScalikeJDBC = "3.1.0"
+  val MySQLConnector = "8.0.8-dmr"
 }
 
 lazy val mainDeps = Seq(
   "org.scala-lang" % "scala-library" % Versions.Scala,
   "org.scala-lang" % "scala-reflect" % Versions.Scala,
-  "ch.qos.logback" % "logback-classic" % Versions.LogBack
+  "ch.qos.logback" % "logback-classic" % Versions.LogBack,
+  "org.scalikejdbc" %% "scalikejdbc" % Versions.ScalikeJDBC,
+  "mysql" % "mysql-connector-java" % Versions.MySQLConnector
 )
 
 lazy val testDeps = Seq(
-  "org.scalatest" %% "scalatest" % Versions.ScalaTest % "it,test"
+  "org.scalatest" %% "scalatest" % Versions.ScalaTest % "it,test",
+  "org.scalikejdbc" %% "scalikejdbc-test" % Versions.ScalikeJDBC % "test"
 )
 
 lazy val commonSettings = Seq(
