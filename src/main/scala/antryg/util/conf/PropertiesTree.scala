@@ -1,5 +1,7 @@
 package antryg.util.conf
 
+import java.util.Properties
+
 case class PropertiesTree(valueOpt: Option[String], children: Map[String, PropertiesTree]) {
 
   import PropertiesTree.splitKeyPath
@@ -32,6 +34,8 @@ case class PropertiesTree(valueOpt: Option[String], children: Map[String, Proper
     } else {
       children.get(keyPath.head).flatMap(_.get(keyPath.tail))
     }
+
+  def subTree(keyHead: String): PropertiesTree = children.getOrElse(keyHead, PropertiesTree.empty)
 }
 
 object PropertiesTree {
@@ -41,6 +45,15 @@ object PropertiesTree {
   def splitKeyPath(keyPath: String): Seq[String] = {
     val keyPathTrimmed = keyPath.trim
     if (keyPathTrimmed.isEmpty) Seq.empty else keyPathTrimmed.split(plainDotRegex).toSeq
+  }
+
+  def fromProperties(properties: Properties): PropertiesTree = {
+    import scala.collection.JavaConverters.propertiesAsScalaMapConverter
+    var tree: PropertiesTree = empty
+    for((key, value) <- properties.asScala) {
+      tree = tree + (key, value)
+    }
+    tree
   }
 }
 
