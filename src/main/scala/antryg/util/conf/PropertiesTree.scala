@@ -1,5 +1,6 @@
 package antryg.util.conf
 
+import java.nio.file.{Files, Path}
 import java.util.Properties
 
 case class PropertiesTree(valueOpt: Option[String], children: Map[String, PropertiesTree]) {
@@ -54,6 +55,12 @@ object PropertiesTree {
       tree = tree + (key, value)
     }
     tree
+  }
+
+  def fromFile(file: Path): PropertiesTree = {
+    val properties = new Properties
+    properties.load(Files.newInputStream(file))
+    fromProperties(properties)
   }
 }
 

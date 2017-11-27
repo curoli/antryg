@@ -1,19 +1,16 @@
 package antryg.sql
 
-import java.nio.file.{Files, Paths}
-import java.util.Properties
+import java.nio.file.Paths
 
 import antryg.util.conf.PropertiesTree
 import org.scalatest.FunSuite
-import scalikejdbc.{ConnectionPool, DB, _}
+import scalikejdbc.{ConnectionPool, DB, scalikejdbcSQLInterpolationImplicitDef}
 
 class SqlTest extends FunSuite {
 
   test("Connect to DB") {
     val dbsConfFile = Paths.get("src", "test", "secrets", "dbs.conf")
-    val properties = new Properties
-    properties.load(Files.newInputStream(dbsConfFile))
-    val propertiesTree = PropertiesTree.fromProperties(properties)
+    val propertiesTree = PropertiesTree.fromFile(dbsConfFile)
     val dbsCreds = SqlCredentials.allFromPropertiesTree(propertiesTree)
     val dbName = "dev"
     val dbCreds = dbsCreds(dbName)
