@@ -2,7 +2,7 @@ package antryg.cql
 
 import com.datastax.driver.core.Cluster
 import org.scalatest.FunSuite
-import antryg.util.MoreJavaConverters.RichListenableFuture
+import antryg.util.GoogleCommonsAdapters.GoogleCommonsListenableFutureAdapter
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.util.{Failure, Success}

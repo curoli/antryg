@@ -4,9 +4,9 @@ import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFut
 
 import scala.concurrent.{Future, Promise}
 
-object MoreJavaConverters {
+object GoogleCommonsAdapters {
 
-  implicit class RichListenableFuture[T](listenableFuture: ListenableFuture[T]) {
+  implicit class GoogleCommonsListenableFutureAdapter[T](listenableFuture: ListenableFuture[T]) {
     /**
       * Converts ListenableFuture to scala.concurrent.Future
       * Code taken and cleaned up from https://gist.github.com/chrisphelps/43fb1b2bd5d958728167
