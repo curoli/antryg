@@ -8,8 +8,8 @@ class SqlTest extends FunSuite {
 
   test("Connect to default DB") {
     SqlConnectionPools.init()
-    println(s"This is MySQL ${SqlQueries.getVersion}")
-    val tables = SqlQueries.showTables
+    println(s"This is MySQL ${SqlUtils.withDefaultDB(SqlQueries.mysqlVersion).get}")
+    val tables = SqlUtils.withDefaultDB(SqlQueries.showTables)
     //    println(s"${tables.size} tables: ${tables.mkString(", ")}.")
     val colReports = tables.map { table =>
       val cols = DB.readOnly { implicit session =>
