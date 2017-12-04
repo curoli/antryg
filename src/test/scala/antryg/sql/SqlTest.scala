@@ -6,21 +6,19 @@ import scalikejdbc.{DB, scalikejdbcSQLInterpolationImplicitDef}
 
 class SqlTest extends FunSuite {
 
-  test("Connect to default DB") {
+  test("Connect to default DB, run sanity checks.") {
     SqlConnectionPools.init()
-    println(s"This is MySQL ${SqlUtils.withDefaultDB(SqlQueries.mysqlVersion).get}")
+    val regexMatchingDot = "\\."
+    val mySqlMajorVersionDetected =
+      SqlUtils.withDefaultDB(SqlQueries.mysqlVersion).get.split(regexMatchingDot).head.toInt
+    val mySqlMajorVersionMinimum = 5
+    assert(mySqlMajorVersionDetected >= mySqlMajorVersionMinimum)
     val tables = SqlUtils.withDefaultDB(SqlQueries.showTables)
-    //    println(s"${tables.size} tables: ${tables.mkString(", ")}.")
-    val colReports = tables.map { table =>
-      val cols = DB.readOnly { implicit session =>
-        sql"describe ${SQLSyntax.createUnsafely(table)}".map(rs =>
-          s"${rs.string("Field")} (${rs.string("Type")})"
-        ).list.apply
-      }
-      s"$table (${cols.size} cols): ${cols.mkString(", ")}"
+    assert(tables.nonEmpty)
+    tables.foreach { table =>
+      val cols = SqlUtils.withDefaultDB(SqlQueries.describeTable(table))
+      assert(cols.nonEmpty)
     }
-    val report = s"${tables.size} tables: ${colReports.mkString("\n", "\n", "\n")}."
-    //    println(report)
   }
 
 }
