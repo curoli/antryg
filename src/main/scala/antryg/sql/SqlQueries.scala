@@ -11,10 +11,9 @@ object SqlQueries {
 
   val showTables: SQLToList[String, HasExtractor] = sql"show tables".map(_.string(1)).list
 
-  def describeTable(tableName: String): SQLToList[String, HasExtractor] = {
+  def describeTable(tableName: String): SQLToList[SqlCol, HasExtractor] = {
     val tableToken = SQLSyntax.createUnsafely(tableName)
-    sql"describe $tableToken".map(rs =>
-      s"${rs.string("Field")} (${rs.string("Type")})"
+    sql"describe $tableToken".map(rs => SqlCol(rs.string("Field"), SqlType.findKnownType(rs.string("Type")).get)
     ).list
   }
 
