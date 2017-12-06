@@ -18,7 +18,6 @@ class SqlTest extends FunSuite {
     tables.foreach { table =>
       val cols = SqlUtils.withDefaultDB(SqlQueries.describeTable(table))
       assert(cols.nonEmpty)
-//      cols.foreach(col => assert(SqlType.knownTypes.contains(col.sqlType)))
     }
   }
 

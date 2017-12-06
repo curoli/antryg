@@ -13,7 +13,7 @@ object SqlQueries {
 
   def describeTable(tableName: String): SQLToList[SqlCol, HasExtractor] = {
     val tableToken = SQLSyntax.createUnsafely(tableName)
-    sql"describe $tableToken".map(rs => SqlCol(rs.string("Field"), SqlType.findKnownType(rs.string("Type")).get)
+    sql"describe $tableToken".map(rs => SqlCol(rs.string("Field"), SqlType(rs.string("Type")))
     ).list
   }
 
