@@ -1,8 +1,6 @@
 package antryg.sql
 
 import org.scalatest.FunSuite
-import scalikejdbc.interpolation.SQLSyntax
-import scalikejdbc.{DB, scalikejdbcSQLInterpolationImplicitDef}
 
 class SqlTest extends FunSuite {
 
@@ -10,13 +8,13 @@ class SqlTest extends FunSuite {
     SqlConnectionPools.init()
     val regexMatchingDot = "\\."
     val mySqlMajorVersionDetected =
-      SqlUtils.withDefaultDB(SqlQueries.mysqlVersion).get.split(regexMatchingDot).head.toInt
+      SqlDb.DefaultDb.queryReadOnly(SqlQueries.mysqlVersion).get.split(regexMatchingDot).head.toInt
     val mySqlMajorVersionMinimum = 5
     assert(mySqlMajorVersionDetected >= mySqlMajorVersionMinimum)
-    val tables = SqlUtils.withDefaultDB(SqlQueries.showTables)
+    val tables = SqlDb.DefaultDb.queryReadOnly(SqlQueries.showTables)
     assert(tables.nonEmpty)
     tables.foreach { table =>
-      val cols = SqlUtils.withDefaultDB(SqlQueries.describeTable(table))
+      val cols = SqlDb.DefaultDb.queryReadOnly(SqlQueries.describeTable(table))
       assert(cols.nonEmpty)
     }
   }
