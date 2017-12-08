@@ -34,5 +34,13 @@ case class SqlType(name: String) {
 
 
 object SqlType {
+  val text = SqlType("text")
+  val longtext = SqlType("longtext")
+  val float = SqlType("float")
+  val double = SqlType("double")
+  object VarSizeTypes {
+    val int = "int"
+    val varchar = "varchar"
+  }
 
 }

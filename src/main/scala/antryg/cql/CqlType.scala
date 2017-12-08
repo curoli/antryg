@@ -10,4 +10,7 @@ object CqlType {
   val int = CqlType("int")
   val bigint = CqlType("bigint")
   val varint = CqlType("varint")
+  val text = CqlType("text")
+  val float = CqlType("float")
+  val double = CqlType("double")
 }
