@@ -23,12 +23,13 @@ class SamplesTest extends FunSuite {
         }
       }
     }
-    println(unconvertedTypes.mkString("\n"))
+    assert(unconvertedTypes.size < 14)
     assert(tables.contains(PortalDbSchema.samplesTable))
     val schema = sqlDb.readTableSchema(PortalDbSchema.samplesTable)
-    println(schema.cols.mkString(", "))
+//    println(schema.cols.mkString(", "))
     val cqlTypes = schema.cols.map(_.sqlType).map(SqlToCql.TypeConverters.default)
-    println(cqlTypes.mkString(", "))
+    assert(cqlTypes.size > 10)
+//    println(cqlTypes.mkString(", "))
   }
 
 }
