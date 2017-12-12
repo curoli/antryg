@@ -1,6 +1,7 @@
 package antryg.cql
 
 import antryg.util.GoogleCommonsAdapters.GoogleCommonsListenableFutureAdapter
+import com.datastax.driver.core.DataType
 import org.scalatest.FunSuite
 
 import scala.concurrent.ExecutionContext.Implicits.global
