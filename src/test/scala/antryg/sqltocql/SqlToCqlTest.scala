@@ -1,11 +1,11 @@
-package antryg.portal
+package antryg.sqltocql
 
-import antryg.portal.SamplesTest.UnconvertedType
-import antryg.sql.{SqlCol, SqlConnectionPools, SqlDb, SqlQueries, SqlType}
-import antryg.sqltocql.SqlToCql
+import antryg.portal.PortalDbSchema
+import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlType}
+import antryg.sqltocql.SqlToCqlTest.UnconvertedType
 import org.scalatest.FunSuite
 
-class SamplesTest extends FunSuite {
+class SqlToCqlTest extends FunSuite {
 
   test("Access samples table") {
     SqlConnectionPools.init()
@@ -26,15 +26,15 @@ class SamplesTest extends FunSuite {
     assert(unconvertedTypes.size < 14)
     assert(tables.contains(PortalDbSchema.samplesTable))
     val schema = sqlDb.readTableSchema(PortalDbSchema.samplesTable)
-//    println(schema.cols.mkString(", "))
+    //    println(schema.cols.mkString(", "))
     val cqlTypes = schema.cols.map(_.sqlType).map(SqlToCql.TypeConverters.default)
     assert(cqlTypes.size > 10)
-//    println(cqlTypes.mkString(", "))
+    //    println(cqlTypes.mkString(", "))
   }
 
 }
 
-object SamplesTest {
+object SqlToCqlTest {
 
   case class UnconvertedType(table: String, col: String, sqlType: SqlType)
 
