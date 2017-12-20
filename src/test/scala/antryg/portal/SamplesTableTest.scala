@@ -1,12 +1,12 @@
 package antryg.portal
 
 import antryg.cql.CqlSessionFactory
-import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries}
+import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlTableSchema}
 import antryg.sqltocql.SqlToCql
 import com.datastax.driver.core.schemabuilder.SchemaBuilder
 import org.scalatest.FunSuite
-import scala.collection.JavaConverters.mapAsJavaMapConverter
 
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.util.Random
 
 class SamplesTableTest extends FunSuite {
@@ -30,6 +30,12 @@ class SamplesTableTest extends FunSuite {
     println(createKeyspaceStmt.getQueryString())
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
+    val table = s"table${Random.alphanumeric.take(10).mkString("")}"
+    val samplesTableSqlCols = SqlDb.DefaultDb.queryReadOnly(SqlQueries.describeTable(PortalDbSchema.samplesTable))
+    val samplesSqlSchema = SqlTableSchema(PortalDbSchema.samplesTable, samplesTableSqlCols)
+    println(samplesSqlSchema)
+    val createTableStmt = SchemaBuilder.createTable(keyspace, table)
+    println(createTableStmt)
     val dropKeyspaceStmt = SchemaBuilder.dropKeyspace(keyspace)
     println(dropKeyspaceStmt.ifExists().getQueryString())
     val dropKeyspaceResult = session.execute(dropKeyspaceStmt)
