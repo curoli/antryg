@@ -5,6 +5,7 @@ import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries}
 import antryg.sqltocql.SqlToCql
 import com.datastax.driver.core.schemabuilder.SchemaBuilder
 import org.scalatest.FunSuite
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 import scala.util.Random
 
@@ -21,13 +22,16 @@ class SamplesTableTest extends FunSuite {
     assert(cqlTypes.size > 10)
     //    println(cqlTypes.mkString(", "))
     val session = CqlSessionFactory.LocalFactory.session
-    val keyspace = s"keyspace${Random.nextLong()}"
+    val keyspace = s"keyspace${Random.alphanumeric.take(10).mkString("")}"
     println(s"Going to create keyspace $keyspace")
-    val createKeyspaceStmt = SchemaBuilder.createKeyspace(keyspace).ifNotExists().`with`()
+    val createKeyspaceStmt =
+      SchemaBuilder.createKeyspace(keyspace).ifNotExists().`with`().
+        replication(Map("class" -> "SimpleStrategy", "replication_factor" -> ("1": AnyRef)).asJava)
     println(createKeyspaceStmt.getQueryString())
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
     val dropKeyspaceStmt = SchemaBuilder.dropKeyspace(keyspace)
+    println(dropKeyspaceStmt.ifExists().getQueryString())
     val dropKeyspaceResult = session.execute(dropKeyspaceStmt)
     println(dropKeyspaceResult)
   }
