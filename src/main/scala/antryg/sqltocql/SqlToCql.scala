@@ -1,6 +1,7 @@
 package antryg.sqltocql
 
-import antryg.sql.SqlType
+import antryg.cql.{CqlCol, CqlTableSchema}
+import antryg.sql.{SqlCol, SqlTableSchema, SqlType}
 import com.datastax.driver.core.DataType
 
 object SqlToCql {
@@ -32,6 +33,20 @@ object SqlToCql {
 
     val defaultWithTextFallback: TypeConvert = default.orElse(allToText)
 
+  }
+
+  def convertCol(sqlCol: SqlCol, typeConvert: TypeConvert): CqlCol =
+    CqlCol(sqlCol.name, typeConvert(sqlCol.sqlType))
+
+  def convertTable(sqlTableSchema: SqlTableSchema, typeConvert: TypeConvert, partitionColNames: Seq[String],
+                   clusterColNames: Seq[String]): CqlTableSchema = {
+    val cqlCols = sqlTableSchema.cols.map(convertCol(_, typeConvert))
+    val cqlColsByName = cqlCols.map(col => (col.name, col)).toMap
+    val partitionCols = partitionColNames.map(cqlColsByName)
+    val clusterCols = clusterColNames.map(cqlColsByName)
+    val partitionAndClusterNames = partitionColNames.toSet ++ clusterColNames.toSet
+    val otherCols = cqlCols.filterNot(col => partitionAndClusterNames(col.name))
+    CqlTableSchema(sqlTableSchema.name, partitionCols, clusterCols, otherCols)
   }
 
 }
