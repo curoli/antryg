@@ -1,7 +1,7 @@
 package antryg.sql
 
 import scalikejdbc.interpolation.SQLSyntax
-import scalikejdbc.{HasExtractor, SQLToList, SQLToOption, scalikejdbcSQLInterpolationImplicitDef}
+import scalikejdbc.{HasExtractor, SQLToList, SQLToOption, SQLToTraversable, scalikejdbcSQLInterpolationImplicitDef}
 
 import scala.language.higherKinds
 
@@ -15,6 +15,15 @@ object SqlQueries {
     val tableToken = SQLSyntax.createUnsafely(tableName)
     sql"describe $tableToken".map(rs => SqlCol(rs.string("Field"), SqlType(rs.string("Type")))
     ).list
+  }
+
+  def selectAll(tableName: String, limit: Option[Int] = None): SQLToTraversable[Map[String, Any], HasExtractor] = {
+    val tableToken = SQLSyntax.createUnsafely(tableName)
+    val sql = limit match {
+      case Some(nLimit) => sql"select * from $tableToken limit $nLimit"
+      case None => sql"select * from $tableToken"
+    }
+    sql.map(_.toMap()).traversable()
   }
 
 }

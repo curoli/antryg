@@ -34,6 +34,7 @@ class SamplesTableTest extends FunSuite {
     val samplesTableSqlCols = SqlDb.DefaultDb.queryReadOnly(SqlQueries.describeTable(PortalDbSchema.samplesTable))
     val samplesSqlSchema = SqlTableSchema(PortalDbSchema.samplesTable, samplesTableSqlCols)
     println(samplesSqlSchema)
+
     val createTableStmt = SchemaBuilder.createTable(keyspace, table)
     println(createTableStmt)
     val dropKeyspaceStmt = SchemaBuilder.dropKeyspace(keyspace)
