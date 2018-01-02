@@ -1,13 +1,12 @@
 package antryg.portal
 
+import antryg.cql.builder.{CreateKeyspace, Replication}
 import antryg.cql.{CqlQueries, CqlSessionFactory}
 import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlTableSchema}
 import antryg.sqltocql.SqlToCql
-import com.datastax.driver.core.DataType
 import com.datastax.driver.core.schemabuilder.SchemaBuilder
 import org.scalatest.FunSuite
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.util.Random
 
 class SamplesTableTest extends FunSuite {
@@ -26,8 +25,7 @@ class SamplesTableTest extends FunSuite {
     val keyspace = s"keyspace${Random.alphanumeric.take(10).mkString("")}"
     println(s"Going to create keyspace $keyspace")
     val createKeyspaceStmt =
-      SchemaBuilder.createKeyspace(keyspace).ifNotExists().`with`().
-        replication(Map("class" -> "SimpleStrategy", "replication_factor" -> ("1": AnyRef)).asJava)
+      CreateKeyspace(name=keyspace, ifNotExists = true, replication = Replication.SimpleStrategy(1)).asJava
     println(createKeyspaceStmt.getQueryString())
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
