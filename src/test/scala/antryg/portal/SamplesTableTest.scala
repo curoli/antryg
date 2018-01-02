@@ -1,10 +1,9 @@
 package antryg.portal
 
-import antryg.cql.builder.{CreateKeyspace, Replication}
+import antryg.cql.builder.{CreateKeyspace, DropKeyspace, Replication}
 import antryg.cql.{CqlQueries, CqlSessionFactory}
 import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlTableSchema}
 import antryg.sqltocql.SqlToCql
-import com.datastax.driver.core.schemabuilder.SchemaBuilder
 import org.scalatest.FunSuite
 
 import scala.util.Random
@@ -25,7 +24,7 @@ class SamplesTableTest extends FunSuite {
     val keyspace = s"keyspace${Random.alphanumeric.take(10).mkString("")}"
     println(s"Going to create keyspace $keyspace")
     val createKeyspaceStmt =
-      CreateKeyspace(name=keyspace, ifNotExists = true, replication = Replication.SimpleStrategy(1)).asJava
+      CreateKeyspace(name = keyspace, ifNotExists = true, replication = Replication.SimpleStrategy(1)).asJava
     println(createKeyspaceStmt.getQueryString())
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
@@ -40,12 +39,12 @@ class SamplesTableTest extends FunSuite {
     println(createTableResult)
     Thread.sleep(1000)
     val sqlTableResult = sqlDb.queryReadOnly(SqlQueries.selectAll(PortalDbSchema.samplesTable, Some(100)))
-    for(values <- sqlTableResult) {
+    for (values <- sqlTableResult) {
       val insertStmt = CqlQueries.insert(keyspace, PortalDbSchema.samplesTable, values)
       session.execute(insertStmt)
     }
-    val dropKeyspaceStmt = SchemaBuilder.dropKeyspace(keyspace)
-    println(dropKeyspaceStmt.ifExists().getQueryString())
+    val dropKeyspaceStmt = DropKeyspace(keyspace, ifExist = true).asJava
+    println(dropKeyspaceStmt.getQueryString())
     val dropKeyspaceResult = session.execute(dropKeyspaceStmt)
     println(dropKeyspaceResult)
   }
