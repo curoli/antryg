@@ -24,8 +24,8 @@ class SamplesTableTest extends FunSuite {
     val keyspace = s"keyspace${Random.alphanumeric.take(10).mkString("")}"
     println(s"Going to create keyspace $keyspace")
     val createKeyspaceStmt =
-      CreateKeyspace(name = keyspace, ifNotExists = true, replication = Replication.SimpleStrategy(1)).asJava
-    println(createKeyspaceStmt.getQueryString())
+      CreateKeyspace(name = keyspace, ifNotExists = true, replication = Replication.SimpleStrategy(1))
+    println(createKeyspaceStmt.asQueryString())
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
     val samplesTableSqlCols = sqlDb.queryReadOnly(SqlQueries.describeTable(PortalDbSchema.samplesTable))
@@ -35,16 +35,16 @@ class SamplesTableTest extends FunSuite {
       SqlToCql.convertTable(samplesSqlSchema, SqlToCql.TypeConverters.defaultWithTextFallback, Seq("ID"), Seq())
     val createTableStmt = CqlQueries.createTable(keyspace, cqlTableSchema)
     println(createTableStmt)
-    val createTableResult = session.execute(createTableStmt)
+    val createTableResult = session.session.execute(createTableStmt)
     println(createTableResult)
     Thread.sleep(1000)
     val sqlTableResult = sqlDb.queryReadOnly(SqlQueries.selectAll(PortalDbSchema.samplesTable, Some(100)))
     for (values <- sqlTableResult) {
       val insertStmt = CqlQueries.insert(keyspace, PortalDbSchema.samplesTable, values)
-      session.execute(insertStmt)
+      session.session.execute(insertStmt)
     }
-    val dropKeyspaceStmt = DropKeyspace(keyspace, ifExist = true).asJava
-    println(dropKeyspaceStmt.getQueryString())
+    val dropKeyspaceStmt = DropKeyspace(keyspace, ifExist = true)
+    println(dropKeyspaceStmt.asQueryString())
     val dropKeyspaceResult = session.execute(dropKeyspaceStmt)
     println(dropKeyspaceResult)
   }
