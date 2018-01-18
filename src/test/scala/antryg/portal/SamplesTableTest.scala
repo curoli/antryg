@@ -25,7 +25,7 @@ class SamplesTableTest extends FunSuite {
     println(s"Going to create keyspace $keyspace")
     val createKeyspaceStmt =
       CreateKeyspace(name = keyspace, ifNotExists = true, replication = Replication.SimpleStrategy(1))
-    println(createKeyspaceStmt.asQueryString())
+    println(createKeyspaceStmt.asQueryString)
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
     val samplesTableSqlCols = sqlDb.queryReadOnly(SqlQueries.describeTable(PortalDbSchema.samplesTable))
@@ -44,7 +44,7 @@ class SamplesTableTest extends FunSuite {
       session.session.execute(insertStmt)
     }
     val dropKeyspaceStmt = DropKeyspace(keyspace, ifExist = true)
-    println(dropKeyspaceStmt.asQueryString())
+    println(dropKeyspaceStmt.asQueryString)
     val dropKeyspaceResult = session.execute(dropKeyspaceStmt)
     println(dropKeyspaceResult)
   }
