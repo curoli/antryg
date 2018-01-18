@@ -1,7 +1,7 @@
 package antryg.portal
 
-import antryg.cql.builder.{CreateKeyspace, DropKeyspace, Replication}
-import antryg.cql.{CqlQueries, CqlSessionFactory}
+import antryg.cql.CqlSessionFactory
+import antryg.cql.builder.{CreateKeyspace, CreateTable, DropKeyspace, Insert, Replication}
 import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlTableSchema}
 import antryg.sqltocql.SqlToCql
 import org.scalatest.FunSuite
@@ -33,15 +33,15 @@ class SamplesTableTest extends FunSuite {
     println(samplesSqlSchema)
     val cqlTableSchema =
       SqlToCql.convertTable(samplesSqlSchema, SqlToCql.TypeConverters.defaultWithTextFallback, Seq("ID"), Seq())
-    val createTableStmt = CqlQueries.createTable(keyspace, cqlTableSchema)
+    val createTableStmt = CreateTable(keyspace, cqlTableSchema)
     println(createTableStmt)
-    val createTableResult = session.session.execute(createTableStmt)
+    val createTableResult = session.execute(createTableStmt)
     println(createTableResult)
     Thread.sleep(1000)
     val sqlTableResult = sqlDb.queryReadOnly(SqlQueries.selectAll(PortalDbSchema.samplesTable, Some(100)))
     for (values <- sqlTableResult) {
-      val insertStmt = CqlQueries.insert(keyspace, PortalDbSchema.samplesTable, values)
-      session.session.execute(insertStmt)
+      val insertStmt = Insert(keyspace, PortalDbSchema.samplesTable, values)
+      session.execute(insertStmt)
     }
     val dropKeyspaceStmt = DropKeyspace(keyspace, ifExist = true)
     println(dropKeyspaceStmt.asQueryString)

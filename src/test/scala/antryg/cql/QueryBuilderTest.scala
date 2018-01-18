@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 class QueryBuilderTest extends FunSuite {
 
   test("QueryBuilder") {
-    val session = CqlSessionFactory.LocalFactory.jSession
+    val session = CqlSessionFactory.LocalFactory.session.session
     val statement = QueryBuilder.select("release_version").from("system", "local").where()
     val row = session.execute(statement).one()
     val version = row.getString("release_version")
