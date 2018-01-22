@@ -38,9 +38,13 @@ object SqlType {
   val longtext = SqlType("longtext")
   val float = SqlType("float")
   val double = SqlType("double")
+  val bigint = SqlType("bigint")
+  val datetime = SqlType("datetime")
+  val timestamp = SqlType("timestamp")
   object VarSizeTypes {
     val int = "int"
     val varchar = "varchar"
+    val bigint = "bigint"
   }
 
 }

@@ -20,11 +20,15 @@ object SqlToCql {
             else if (size <= 9) DataType.cint
             else if (size <= 19) DataType.bigint
             else DataType.varint
+          case SqlType.VarSizeTypes.bigint => DataType.bigint
           case SqlType.VarSizeTypes.varchar => DataType.text
         }
       case SqlType.text | SqlType.longtext => DataType.text
       case SqlType.float => DataType.cfloat
       case SqlType.double => DataType.cdouble
+      case SqlType.bigint => DataType.bigint
+      case SqlType.datetime => DataType.date
+      case SqlType.timestamp => DataType.date
     }
 
     val allToText: TypeConvert = {

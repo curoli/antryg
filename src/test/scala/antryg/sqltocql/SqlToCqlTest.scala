@@ -23,7 +23,7 @@ class SqlToCqlTest extends FunSuite {
         }
       }
     }
-    assert(unconvertedTypes.size < 14)
+    assert(unconvertedTypes.size < 10)
     assert(tables.contains(PortalDbSchema.samplesTable))
     val schema = sqlDb.readTableSchema(PortalDbSchema.samplesTable)
     //    println(schema.cols.mkString(", "))
