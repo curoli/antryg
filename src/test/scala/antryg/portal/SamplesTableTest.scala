@@ -2,6 +2,7 @@ package antryg.portal
 
 import antryg.cql.CqlSessionFactory
 import antryg.cql.builder.{CreateKeyspace, CreateTable, DropKeyspace, Insert, Replication}
+import antryg.portal.sql.PortalSqlSchema
 import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlTableSchema}
 import antryg.sqltocql.SqlToCql
 import org.scalatest.FunSuite
@@ -14,8 +15,8 @@ class SamplesTableTest extends FunSuite {
     SqlConnectionPools.init()
     val sqlDb = SqlDb.DefaultDb
     val tables = sqlDb.queryReadOnly(SqlQueries.showTables)
-    assert(tables.contains(PortalDbSchema.samplesTable))
-    val sqlSchema = sqlDb.readTableSchema(PortalDbSchema.samplesTable)
+    assert(tables.contains(PortalSqlSchema.samplesTable))
+    val sqlSchema = sqlDb.readTableSchema(PortalSqlSchema.samplesTable)
     //    println(sqlSchema.cols.mkString(", "))
     val cqlTypes = sqlSchema.cols.map(_.sqlType).map(SqlToCql.TypeConverters.default)
     assert(cqlTypes.size > 10)
@@ -28,8 +29,8 @@ class SamplesTableTest extends FunSuite {
     println(createKeyspaceStmt.asQueryString)
     val createKeyspaceResult = session.execute(createKeyspaceStmt).one()
     println(createKeyspaceResult)
-    val samplesTableSqlCols = sqlDb.queryReadOnly(SqlQueries.describeTable(PortalDbSchema.samplesTable))
-    val samplesSqlSchema = SqlTableSchema(PortalDbSchema.samplesTable, samplesTableSqlCols)
+    val samplesTableSqlCols = sqlDb.queryReadOnly(SqlQueries.describeTable(PortalSqlSchema.samplesTable))
+    val samplesSqlSchema = SqlTableSchema(PortalSqlSchema.samplesTable, samplesTableSqlCols)
     println(samplesSqlSchema)
     val cqlTableSchema =
       SqlToCql.convertTable(samplesSqlSchema, SqlToCql.TypeConverters.defaultWithTextFallback, Seq("ID"), Seq())
@@ -38,9 +39,9 @@ class SamplesTableTest extends FunSuite {
     val createTableResult = session.execute(createTableStmt)
     println(createTableResult)
     Thread.sleep(1000)
-    val sqlTableResult = sqlDb.queryReadOnly(SqlQueries.selectAll(PortalDbSchema.samplesTable, Some(100)))
+    val sqlTableResult = sqlDb.queryReadOnly(SqlQueries.selectAll(PortalSqlSchema.samplesTable, Some(100)))
     for (values <- sqlTableResult) {
-      val insertStmt = Insert(keyspace, PortalDbSchema.samplesTable, values)
+      val insertStmt = Insert(keyspace, PortalSqlSchema.samplesTable, values)
       session.execute(insertStmt)
     }
     val dropKeyspaceStmt = DropKeyspace(keyspace, ifExist = true)

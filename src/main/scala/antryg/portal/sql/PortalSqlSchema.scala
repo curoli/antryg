@@ -1,8 +1,8 @@
-package antryg.portal
+package antryg.portal.sql
 
 import antryg.sql.{SqlCol, SqlTableSchema}
 
-object PortalDbSchema {
+object PortalSqlSchema {
 
   val samplesTable = "SAMPLE"
   val variantMainTable = "VARIANT"

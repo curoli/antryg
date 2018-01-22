@@ -1,6 +1,6 @@
 package antryg.sqltocql
 
-import antryg.portal.PortalDbSchema
+import antryg.portal.sql.PortalSqlSchema
 import antryg.sql.{SqlConnectionPools, SqlDb, SqlQueries, SqlType}
 import antryg.sqltocql.SqlToCqlTest.UnconvertedType
 import org.scalatest.FunSuite
@@ -24,8 +24,8 @@ class SqlToCqlTest extends FunSuite {
       }
     }
     assert(unconvertedTypes.size < 10)
-    assert(tables.contains(PortalDbSchema.samplesTable))
-    val schema = sqlDb.readTableSchema(PortalDbSchema.samplesTable)
+    assert(tables.contains(PortalSqlSchema.samplesTable))
+    val schema = sqlDb.readTableSchema(PortalSqlSchema.samplesTable)
     //    println(schema.cols.mkString(", "))
     val cqlTypes = schema.cols.map(_.sqlType).map(SqlToCql.TypeConverters.default)
     assert(cqlTypes.size > 10)

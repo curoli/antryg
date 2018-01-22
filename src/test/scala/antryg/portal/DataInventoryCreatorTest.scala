@@ -1,5 +1,6 @@
 package antryg.portal
 
+import antryg.portal.sql.DataInventoryCreator
 import antryg.sql.{SqlConnectionPools, SqlDb}
 import org.scalatest.FunSuite
 
