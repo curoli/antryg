@@ -22,9 +22,12 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
   def createIfNeeded(): Unit = if (!exists) create()
 
   def addCol(col: CqlCol): Unit = {
-    createIfNeeded()
-    session.execute(AlterTableAddCol(keyspace.name, name, col))
+      createIfNeeded()
+      session.execute(AlterTableAddCol(keyspace.name, name, col))
+      schema :+= col
   }
+
+  def addColIfNeeded(col: CqlCol): Unit = if (!schema.hasCol(col.name)) {addCol(col) }
 
   def insert(values: Map[String, Any]): Unit = {
     session.execute(Insert(keyspace.name, name, values))

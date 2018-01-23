@@ -9,6 +9,7 @@ case class VariantFinderSchema(variantTable: CqlTableSchema) {
 }
 
 object VariantFinderSchema {
+  val keyspaceName = "digkb"
   object TableNames {
     val variantTable = "variants"
   }

@@ -26,4 +26,17 @@ object SqlQueries {
     sql.map(_.toMap()).traversable()
   }
 
+  def select(tableName: String, colNames: Seq[String], limit: Option[Int] = None):
+  SQLToTraversable[Map[String, Any], HasExtractor] = {
+    val tableToken = SQLSyntax.createUnsafely(tableName)
+    val colListToken = SQLSyntax.createUnsafely(colNames.mkString(", "))
+    val sql = limit match {
+      case Some(nLimit) => sql"select $colListToken from $tableToken limit $nLimit"
+      case None => sql"select $colListToken from $tableToken"
+    }
+    sql.map(_.toMap()).traversable()
+  }
+
+
+
 }
