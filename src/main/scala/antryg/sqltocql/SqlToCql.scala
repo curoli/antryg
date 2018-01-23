@@ -1,5 +1,6 @@
 package antryg.sqltocql
 
+import antryg.cql.CqlTableSchema.PrimaryKey
 import antryg.cql.{CqlCol, CqlTableSchema}
 import antryg.sql.{SqlCol, SqlTableSchema, SqlType}
 import com.datastax.driver.core.DataType
@@ -50,7 +51,8 @@ object SqlToCql {
     val clusterCols = clusterColNames.map(cqlColsByName)
     val partitionAndClusterNames = partitionColNames.toSet ++ clusterColNames.toSet
     val otherCols = cqlCols.filterNot(col => partitionAndClusterNames(col.name))
-    CqlTableSchema(sqlTableSchema.name, partitionCols, clusterCols, otherCols)
+    val primaryKey = PrimaryKey(partitionCols, clusterCols)
+    CqlTableSchema(sqlTableSchema.name, primaryKey, otherCols)
   }
 
 }

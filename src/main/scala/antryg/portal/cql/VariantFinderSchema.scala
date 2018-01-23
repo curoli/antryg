@@ -1,5 +1,6 @@
 package antryg.portal.cql
 
+import antryg.cql.CqlTableSchema.PrimaryKey
 import antryg.cql.{CqlCol, CqlTableSchema}
 import com.datastax.driver.core.DataType
 
@@ -22,8 +23,7 @@ object VariantFinderSchema {
     val variantTable =
       CqlTableSchema(
         name = TableNames.variantTable,
-        partitionCols = Seq(Cols.variantId),
-        clusterCols = Seq.empty,
+        key = PrimaryKey(Seq(Cols.variantId), Seq.empty),
         otherCols = Seq(Cols.chromosome, Cols.position, Cols.predictedEffect, Cols.referenceDatasets)
       )
     VariantFinderSchema(variantTable)
