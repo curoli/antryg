@@ -12,9 +12,12 @@ object PortalSqlSchema {
 
   object VariantMainTable {
     val name: String = "VARIANT"
-    val variantId: String = "ID"
-    val chromosome: String = "CHROM"
-    val position: String = "POS"
+    object Cols {
+      val variantId: String = "ID"
+      val chromosome: String = "CHROM"
+      val position: String = "POS"
+      val coreCols: Seq[String] = Seq(variantId, chromosome, position)
+    }
   }
 
   def getVariantColumn(schema: SqlTableSchema): Option[SqlCol] = {
