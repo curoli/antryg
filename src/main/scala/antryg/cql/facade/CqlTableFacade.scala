@@ -15,7 +15,7 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
 
   def create(): Unit = {
     keyspace.createIfNeeded()
-    session.execute(CreateTable(keyspace.name, schema))
+    session.execute(CreateTable(keyspace.name, schema, ifNotExists = true))
     exists = true
   }
 

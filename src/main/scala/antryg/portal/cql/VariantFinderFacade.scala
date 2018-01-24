@@ -18,7 +18,7 @@ class VariantFinderFacade(val session: CqlSession, replication: Replication) {
       otherCols = Seq(Cols.chromosome, Cols.position)
     )
 
-  variantTable.create()
+  variantTable.createIfNeeded()
 
   def insertVariantCoreData(coreData: VariantCoreData): Unit = {
     val values = Map(

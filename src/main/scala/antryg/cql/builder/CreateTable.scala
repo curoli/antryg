@@ -3,9 +3,12 @@ package antryg.cql.builder
 import antryg.cql.CqlTableSchema
 import com.datastax.driver.core.schemabuilder.{Create, SchemaBuilder}
 
-case class CreateTable(keyspace: String, schema: CqlTableSchema) extends CqlStatement {
+case class CreateTable(keyspace: String, schema: CqlTableSchema, ifNotExists: Boolean = true) extends CqlStatement {
   override def asJava: Create = {
     var createTableStmt: Create = SchemaBuilder.createTable(keyspace, schema.name)
+    if(ifNotExists) {
+      createTableStmt = createTableStmt.ifNotExists()
+    }
     for(partitionCol <- schema.key.partitionCols) {
       createTableStmt = createTableStmt.addPartitionKey(partitionCol.name, partitionCol.dataType)
     }

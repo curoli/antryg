@@ -17,11 +17,13 @@ sealed trait SqlDb {
 object SqlDb {
 
   object DefaultDb extends SqlDb {
+    SqlConnectionPools.init()
     override def queryReadOnly[A, C[_]](query: SQLToResult[A, HasExtractor, C]): C[A] =
       DB.readOnly { implicit session => query.apply() }
   }
 
   case class NamedDb(name: String) extends SqlDb {
+    SqlConnectionPools.init()
     override def queryReadOnly[A, C[_]](query: SQLToResult[A, HasExtractor, C]): C[A] =
       NamedDB(name).readOnly { implicit session => query.apply() }
   }
