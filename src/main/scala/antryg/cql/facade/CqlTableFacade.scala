@@ -32,7 +32,8 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
   def addColsAsNeeded(cols: Iterable[CqlCol]): Unit = cols.foreach(addColIfNeeded)
 
   def insert(values: Map[String, Any]): Unit = {
-    session.execute(Insert(keyspace.name, name, values))
+    val result = session.execute(Insert(keyspace.name, name, values))
+    println(s"Inserting ${keyspace.name}.$name: ${result.wasApplied()} ($values)")
   }
 
   def drop(): Unit = {

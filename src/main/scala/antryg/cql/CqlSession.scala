@@ -8,4 +8,5 @@ case class CqlSession(address: String, session: Session) {
   def execute(statement: CqlStatement): ResultSet = session.execute(statement.asJava)
   def executeAsync(string: String): ResultSetFuture = session.executeAsync(string)
   def executeAsync(statement: CqlStatement): ResultSetFuture = session.executeAsync(statement.asJava)
+  def close(): Unit = session.close()
 }

@@ -3,7 +3,7 @@ package antryg.sql
 import java.nio.file.{Path, Paths}
 
 import antryg.util.conf.PropertiesTree
-import scalikejdbc.{ConnectionPool, DB}
+import scalikejdbc.ConnectionPool
 
 object SqlConnectionPools {
 
