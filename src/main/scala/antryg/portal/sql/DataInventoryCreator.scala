@@ -6,7 +6,7 @@ object DataInventoryCreator {
 
   case class TableInventory(name: String, schema: SqlTableSchema, variantIdColOpt: Option[SqlCol]) {
     val isVariantTable: Boolean = variantIdColOpt.nonEmpty
-    val isMainVariantTable: Boolean = name == PortalSqlSchema.variantMainTable
+    val isMainVariantTable: Boolean = name == PortalSqlSchema.VariantMainTable.name
     val studyAndTraitOpt: Option[(String, String)] = {
       val nameSplit = name.split("__")
       if (nameSplit.size == 2) {

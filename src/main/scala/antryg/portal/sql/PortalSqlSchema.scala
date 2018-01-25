@@ -5,27 +5,21 @@ import antryg.sql.{SqlCol, SqlTableSchema}
 object PortalSqlSchema {
 
   val samplesTable = "SAMPLE"
-  val variantMainTable = "VARIANT"
-  val variantColMainTable = "ID"
 
-  val variantColOtherTables = "VAR_ID"
+  object CommonCols {
+    val variantId: String = "VAR_ID"
+  }
 
   object VariantMainTable {
-    val name: String = "VARIANT"
+    val name: String = "common_dv1"
     object Cols {
-      val variantId: String = "ID"
+      val variantId: String = CommonCols.variantId
       val chromosome: String = "CHROM"
       val position: String = "POS"
       val coreCols: Seq[String] = Seq(variantId, chromosome, position)
     }
   }
 
-  def getVariantColumn(schema: SqlTableSchema): Option[SqlCol] = {
-    if(schema.name == variantMainTable) {
-      schema.cols.find(col => col.name == variantColMainTable || col.name == variantColOtherTables)
-    } else {
-      schema.cols.find(col => col.name == variantColOtherTables)
-    }
-  }
+  def getVariantColumn(schema: SqlTableSchema): Option[SqlCol] = schema.cols.find(_.name == CommonCols.variantId)
 
 }
