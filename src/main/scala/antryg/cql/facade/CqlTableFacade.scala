@@ -33,7 +33,6 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
 
   def insert(values: Map[String, Any]): Unit = {
     val result = session.execute(Insert(keyspace.name, name, values))
-    println(s"Inserting ${keyspace.name}.$name: ${result.wasApplied()} ($values)")
   }
 
   def drop(): Unit = {
