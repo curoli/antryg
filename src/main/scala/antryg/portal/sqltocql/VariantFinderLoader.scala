@@ -7,22 +7,25 @@ import antryg.portal.sql.PortalSqlQueries
 import antryg.portal.sqltocql.VariantFinderLoader.Reporter
 import antryg.portal.sqltocql.VariantFinderLoader.Reporter.{CoreTranche, Tranche}
 import antryg.sql.SqlDb
+import scalikejdbc.WrappedResultSet
 
 class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade, variantIdSampler: VariantIdSampler,
                           reporter: Reporter = Reporter.TimeIntervalReporter(10000)) {
 
   def loadVariantMainTable(): Unit = {
     reporter.sendingCoreDataQueryToSql()
-    val rows = sqlDb.queryReadOnly(PortalSqlQueries.selectVariantCoreData(Some(200000)))
+    val selectLimitOpt = Some(20000000)
     reporter.sendingCoreDataInsertsToCassandra()
     var count: Long = 0L
-    rows.foreach { row =>
-      if (variantIdSampler(row.variantId)) {
-        variantFinderFacade.insertVariantCoreData(row)
-        count += 1
-        reporter.reportCoreDataLoaded(count)
-      }
+    val visitor: WrappedResultSet => Unit = { row =>
+      println(row)
+//      if (variantIdSampler(row.variantId)) {
+////        variantFinderFacade.insertVariantCoreData(row)
+//        count += 1
+//        reporter.reportCoreDataLoaded(count)
+//      }
     }
+    sqlDb.queryReadOnlyForeach(PortalSqlQueries.selectVariantCoreData(selectLimitOpt), visitor)
     reporter.doneLoadingCoreData()
   }
 
