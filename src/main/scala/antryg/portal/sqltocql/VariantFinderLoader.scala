@@ -14,20 +14,20 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
                           reporter: Reporter = Reporter.TimeIntervalReporter(10000)) {
 
   def loadVariantMainTable(): Unit = {
-    reporter.sendingCoreDataQueryToSql()
+    reporter.sendingCoreDataQueryToSql(CoreTranche)
     val selectLimitOpt = Some(20000000)
-    reporter.sendingCoreDataInsertsToCassandra()
+    reporter.sendingCoreDataInsertsToCassandra(CoreTranche)
     var count: Long = 0L
     val visitor: WrappedResultSet => Unit = { row =>
       val coreData = PortalSqlSchema.getVariantCoreData(row)
       if (variantIdSampler(coreData.variantId)) {
         variantFinderFacade.insertVariantCoreData(coreData)
         count += 1
-        reporter.reportCoreDataLoaded(count)
+        reporter.reportCoreDataLoaded(count, CoreTranche)
       }
     }
     sqlDb.queryReadOnlyForeach(PortalSqlQueries.selectVariantCoreData(selectLimitOpt), visitor)
-    reporter.doneLoadingCoreData()
+    reporter.doneLoadingCoreData(CoreTranche)
   }
 
   def loadCohortPhenoTable(table: String, cohort: String, pheno: String): Unit = {
@@ -43,13 +43,13 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
 object VariantFinderLoader {
 
   trait Reporter {
-    def sendingCoreDataQueryToSql(tranche: Tranche = CoreTranche): Unit
+    def sendingCoreDataQueryToSql(tranche: Tranche): Unit
 
-    def sendingCoreDataInsertsToCassandra(tranche: Tranche = CoreTranche): Unit
+    def sendingCoreDataInsertsToCassandra(tranche: Tranche): Unit
 
-    def reportCoreDataLoaded(count: Long, tranche: Tranche = CoreTranche): Unit
+    def reportCoreDataLoaded(count: Long, tranche: Tranche): Unit
 
-    def doneLoadingCoreData(tranche: Tranche = CoreTranche): Unit
+    def doneLoadingCoreData(tranche: Tranche): Unit
   }
 
   object Reporter {
@@ -70,18 +70,18 @@ object VariantFinderLoader {
       var lastTime: Long = System.currentTimeMillis()
       var lastCount: Long = 0L
 
-      override def sendingCoreDataQueryToSql(tranche: Tranche = CoreTranche): Unit = {
+      override def sendingCoreDataQueryToSql(tranche: Tranche): Unit = {
         lastTime = System.currentTimeMillis()
         println(s"[${new Date(lastTime)}] Sending ${tranche.label} query to SQL DB.")
       }
 
-      override def sendingCoreDataInsertsToCassandra(tranche: Tranche = CoreTranche): Unit = {
+      override def sendingCoreDataInsertsToCassandra(tranche: Tranche): Unit = {
         lastTime = System.currentTimeMillis()
         println(s"[${new Date(lastTime)}] Now writing ${tranche.label} to Cassandra.")
       }
 
 
-      override def reportCoreDataLoaded(count: Long, tranche: Tranche = CoreTranche): Unit = {
+      override def reportCoreDataLoaded(count: Long, tranche: Tranche): Unit = {
         lastCount = count
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastTime > interval) {
@@ -90,7 +90,7 @@ object VariantFinderLoader {
         }
       }
 
-      override def doneLoadingCoreData(tranche: Tranche = CoreTranche): Unit = {
+      override def doneLoadingCoreData(tranche: Tranche): Unit = {
         lastTime = System.currentTimeMillis()
         println(s"[${new Date(lastTime)}] Done loading ${tranche.label} - loaded $lastCount variants.")
       }
