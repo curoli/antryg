@@ -3,7 +3,8 @@ package antryg.portal.sqltocql
 import java.util.Date
 
 import antryg.portal.cql.VariantFinderFacade
-import antryg.portal.sql.PortalSqlQueries
+import antryg.portal.cql.VariantFinderFacade.VariantCoreData
+import antryg.portal.sql.{PortalSqlQueries, PortalSqlSchema}
 import antryg.portal.sqltocql.VariantFinderLoader.Reporter
 import antryg.portal.sqltocql.VariantFinderLoader.Reporter.{CoreTranche, Tranche}
 import antryg.sql.SqlDb
@@ -18,12 +19,12 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
     reporter.sendingCoreDataInsertsToCassandra()
     var count: Long = 0L
     val visitor: WrappedResultSet => Unit = { row =>
-      println(row)
-//      if (variantIdSampler(row.variantId)) {
-////        variantFinderFacade.insertVariantCoreData(row)
-//        count += 1
-//        reporter.reportCoreDataLoaded(count)
-//      }
+      val coreData = PortalSqlSchema.getVariantCoreData(row)
+      if (variantIdSampler(coreData.variantId)) {
+        variantFinderFacade.insertVariantCoreData(coreData)
+        count += 1
+        reporter.reportCoreDataLoaded(count)
+      }
     }
     sqlDb.queryReadOnlyForeach(PortalSqlQueries.selectVariantCoreData(selectLimitOpt), visitor)
     reporter.doneLoadingCoreData()

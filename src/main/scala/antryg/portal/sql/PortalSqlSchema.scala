@@ -1,6 +1,8 @@
 package antryg.portal.sql
 
+import antryg.portal.cql.VariantFinderFacade.VariantCoreData
 import antryg.sql.{SqlCol, SqlTableSchema}
+import scalikejdbc.WrappedResultSet
 
 object PortalSqlSchema {
 
@@ -21,5 +23,12 @@ object PortalSqlSchema {
   }
 
   def getVariantColumn(schema: SqlTableSchema): Option[SqlCol] = schema.cols.find(_.name == CommonCols.variantId)
+
+  def getVariantCoreData(row: WrappedResultSet): VariantCoreData = {
+    val variantId = row.string(VariantMainTable.Cols.variantId)
+    val chromosome = row.string(VariantMainTable.Cols.chromosome)
+    val position = row.long(VariantMainTable.Cols.position)
+    VariantCoreData(variantId, chromosome, position)
+  }
 
 }

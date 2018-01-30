@@ -11,6 +11,7 @@ object VariantFinderLoadApp extends App {
   val replication = Replication.SimpleStrategy(1)
   val variantFinderFacade = new VariantFinderFacade(session, replication)
   val sqlDb = SqlDb.DefaultDb
+  sqlDb.setFetchSize(1000)
   val variantIdSampler = VariantIdSampler.decimateBy(1000)
   val variantFinderLoader = new VariantFinderLoader(sqlDb, variantFinderFacade, variantIdSampler)
   println("yo")
