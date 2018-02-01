@@ -2,7 +2,7 @@ package antryg.portal.apps
 
 import antryg.cql.CqlSessionFactory
 import antryg.cql.builder.Replication
-import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{LoadCohort, LoadCore, PrintHelp}
+import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{LoadCohort, LoadCore, PrintHelp, ShowMetDataVersions}
 import antryg.portal.cql.VariantFinderFacade
 import antryg.portal.sqltocql.{VariantFinderLoader, VariantIdSampler}
 import antryg.sql.SqlDb
@@ -19,13 +19,14 @@ object VariantFinderLoadApp extends App {
     printHelp()
   }
 
-  trait MenuChoice {
+  sealed trait MenuChoice {
 
   }
 
   object MenuChoice {
 
     case object LoadCore extends MenuChoice
+    case object ShowMetDataVersions extends MenuChoice
     case class LoadCohort(cohort: String, pheno: String) extends MenuChoice
     case object PrintHelp extends MenuChoice
 
@@ -54,6 +55,15 @@ object VariantFinderLoadApp extends App {
                 case _ => Left(s"Unknown source '$source'")
               }
             }
+          case "show" =>
+            if(args.size < 2) {
+              Left("Didn't specify what to show")
+            } else {
+              val itemsOfInterest = args(1)
+              itemsOfInterest match {
+                case "versions" => Right(ShowMetDataVersions)
+              }
+            }
           case "help" => Right(PrintHelp)
           case _ => Left(s"Unknown command '$command'")
         }
@@ -77,6 +87,8 @@ object VariantFinderLoadApp extends App {
       val variantFinderLoader = new VariantFinderLoader(sqlDb, variantFinderFacade, variantIdSampler)
       menuChoice match {
         case LoadCore => variantFinderLoader.loadVariantMainTable()
+        case ShowMetDataVersions =>
+          println(variantFinderLoader.getMetaDataVersions().to[Seq].sortBy(str => str).mkString(", "))
         case LoadCohort(cohort, pheno) => ???
         case PrintHelp => printHelp()
       }

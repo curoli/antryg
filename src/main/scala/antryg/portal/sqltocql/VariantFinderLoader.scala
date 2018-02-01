@@ -30,6 +30,8 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
     reporter.doneLoadingCoreData(CoreTranche)
   }
 
+  def getMetaDataVersions(): Set[String] = sqlDb.queryReadOnly(PortalSqlQueries.selectMetaDataVersions).toSet
+
   def loadCohortPhenoTable(table: String, cohort: String, pheno: String): Unit = {
 
   }

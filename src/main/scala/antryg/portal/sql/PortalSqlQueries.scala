@@ -26,6 +26,12 @@ object PortalSqlQueries {
 
   case class CohortPhenoTables(versionedCohort: String, tableName: String, pheno: String)
 
+  def selectMetaDataVersions: SQLToTraversable[String, HasExtractor] = {
+    val sql =
+      sql"select distinct ver from META_MDV;"
+    sql.fetchSize(fetchSize).map(row => row.string("ver")).traversable()
+  }
+
   def selectCohortPheno(metaDataVersion: String): SQLToTraversable[CohortPhenoTables, HasExtractor] = {
     val sql =
       sql"""select distinct ver.ID, dataset_ph.TBL, dataset_ph.PH
