@@ -11,7 +11,7 @@ object SqlConnectionPools {
 
   val defaultDbName = "dev"
 
-  def addPropsToUrl(url:String): String = url + "?useCursorFetch=true"
+  def addPropsToUrl(url: String): String = url + "?useCursorFetch=true"
 
   val dbNames: Set[String] = {
     val propertiesTree = PropertiesTree.fromFile(dbsConfFile)

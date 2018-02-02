@@ -4,10 +4,12 @@ import antryg.cql.CqlSessionFactory
 import antryg.cql.builder.Replication
 import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, ShowTables, ShowVersions}
 import antryg.portal.cql.VariantFinderFacade
+import antryg.portal.sql.PortalSqlQueries.CohortPhenoTableInfo
 import antryg.portal.sqltocql.{VariantFinderLoader, VariantIdSampler}
 import antryg.sql.SqlDb
 
 object VariantFinderLoadApp extends App {
+
   def printHelp(): Unit = {
     println(
       s"""Usage:
@@ -24,6 +26,9 @@ object VariantFinderLoadApp extends App {
     println(message)
     printHelp()
   }
+
+  def tableInfoToString(tableInfo: CohortPhenoTableInfo): String =
+    s"table name: ${tableInfo.tableName}, cohort: ${tableInfo.cohort}, phenotype: ${tableInfo.pheno}"
 
   sealed trait MenuChoice {
 
@@ -75,7 +80,7 @@ object VariantFinderLoadApp extends App {
               itemsOfInterest match {
                 case "versions" => Right(ShowVersions)
                 case "tables" =>
-                  if(args.size < 3) {
+                  if (args.size < 3) {
                     Left("Did not specify version.")
                   } else {
                     val version = args(2)
@@ -85,13 +90,13 @@ object VariantFinderLoadApp extends App {
               }
             }
           case "info" =>
-            if(args.size < 2) {
+            if (args.size < 2) {
               Left("Did not specify what kind of info.")
             } else {
               val itemToInfo = args(1)
               itemToInfo match {
                 case "table" =>
-                  if(args.size < 3) {
+                  if (args.size < 3) {
                     Left("Did not specify table.")
                   } else {
                     val table = args(2)
@@ -124,10 +129,17 @@ object VariantFinderLoadApp extends App {
       menuChoice match {
         case LoadCore => variantFinderLoader.loadVariantMainTable()
         case ShowVersions =>
-          println(variantFinderLoader.getMetaDataVersions().to[Seq].sortBy(str => str).mkString(", "))
-        case ShowTables(version) => ???
-        case InfoTable(table) => ???
-        case LoadCohort(table) => ???
+          println(variantFinderLoader.getVersions().to[Seq].sortBy(str => str).mkString(", "))
+        case ShowTables(version) =>
+          println(variantFinderLoader.getCohortPhenoTablesForVersion(version).map(tableInfoToString)
+            .mkString("\n"))
+        case InfoTable(table) =>
+          val tableInfoOpt = variantFinderLoader.getCohortPhenoTableInfo(table)
+          tableInfoOpt match {
+            case Some(tableInfo) => println(tableInfoToString(tableInfo))
+            case None => println(s"Could not get table info for table '$table'")
+          }
+        case LoadCohort(table) => variantFinderLoader.loadCohortPhenoTable(table)
         case PrintHelp => printHelp()
       }
       sqlDb.close()

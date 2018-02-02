@@ -3,7 +3,7 @@ package antryg.portal.sql
 import antryg.portal.cql.VariantFinderFacade.VariantCoreData
 import antryg.portal.sql.PortalSqlSchema.VariantMainTable
 import scalikejdbc.interpolation.SQLSyntax
-import scalikejdbc.{HasExtractor, SQLToTraversable, scalikejdbcSQLInterpolationImplicitDef}
+import scalikejdbc.{HasExtractor, SQLToOption, SQLToTraversable, scalikejdbcSQLInterpolationImplicitDef}
 
 object PortalSqlQueries {
 
@@ -24,23 +24,30 @@ object PortalSqlQueries {
     }.traversable()
   }
 
-  case class CohortPhenoTables(versionedCohort: String, tableName: String, pheno: String)
-
   def selectMetaDataVersions: SQLToTraversable[String, HasExtractor] = {
     val sql =
       sql"select distinct ver from META_MDV;"
     sql.fetchSize(fetchSize).map(row => row.string("ver")).traversable()
   }
 
-  def selectCohortPheno(metaDataVersion: String): SQLToTraversable[CohortPhenoTables, HasExtractor] = {
+  case class CohortPhenoTableInfo(tableName: String, cohort: String, pheno: String)
+
+  def selectCohortPhenoByVersion(metaDataVersion: String): SQLToTraversable[CohortPhenoTableInfo, HasExtractor] = {
     val sql =
-      sql"""select distinct ver.ID, dataset_ph.TBL, dataset_ph.PH
+      sql"""select distinct ver.ID, dataset_ph.DATASET, dataset_ph.TBL, dataset_ph.PH
             from META_ID_PH id_ph, META_MDV ver, META_DATASET_PH dataset_ph, META_DATASET dataset, META_PH ph
             where ver.ID = id_ph.ID and id_ph.PH = dataset_ph.PH and ver.DATASET = dataset_ph.DATASET
             and ver.DATASET = dataset.DATASET and dataset_ph.PH = ph.PH
             and ver.ver = ${metaDataVersion};"""
     sql.fetchSize(fetchSize).
-      map(row => CohortPhenoTables(row.string("ID"), row.string("TBL"), row.string("PH"))).traversable()
+      map(row => CohortPhenoTableInfo(row.string("TBL"), row.string("DATASET"), row.string("PH"))).traversable()
+  }
+
+  def selectCohortPhenoByTable(table: String): SQLToOption[CohortPhenoTableInfo, HasExtractor] = {
+    val sql =
+      sql"""select * from META_DATASET_PH where TBL = ${table}"""
+    sql.fetchSize(fetchSize).
+      map(row => CohortPhenoTableInfo(row.string("TBL"), row.string("DATASET"), row.string("PH"))).headOption()
   }
 
 
