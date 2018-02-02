@@ -3,10 +3,11 @@ package antryg.portal.sqltocql
 import java.util.Date
 
 import antryg.portal.cql.VariantFinderFacade
+import antryg.portal.cql.VariantFinderFacade.VariantCohortData
 import antryg.portal.sql.PortalSqlQueries.CohortPhenoTableInfo
 import antryg.portal.sql.{PortalSqlQueries, PortalSqlSchema}
 import antryg.portal.sqltocql.VariantFinderLoader.Reporter
-import antryg.portal.sqltocql.VariantFinderLoader.Reporter.{CoreTranche, Tranche}
+import antryg.portal.sqltocql.VariantFinderLoader.Reporter.{CohortPhenoTranche, CoreTranche, Tranche}
 import antryg.sql.SqlDb
 import scalikejdbc.WrappedResultSet
 
@@ -48,7 +49,20 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
   }
 
   def loadCohortPhenoTable(table: String, cohort: String, pheno: String): Unit = {
-    ???
+    val tranche = CohortPhenoTranche(cohort, pheno)
+    reporter.sendingDataQueryToSql(tranche)
+    reporter.sendingDataInsertsToCassandra(tranche)
+    var count: Long = 0L
+    sqlDb.queryReadOnly(PortalSqlQueries.selectFromCohortPhenoTable(table)).foreach { row =>
+      val variantId = row.variantId
+      if(variantIdSampler(variantId)) {
+        val variantCohortData = VariantCohortData(row.variantId, cohort, pheno, row.values)
+        variantFinderFacade.insertVariantCohortData(variantCohortData)
+        count += 1
+        reporter.reportDataLoaded(count, tranche)
+      }
+    }
+    reporter.doneLoadingData(tranche)
   }
 
   def load(): Unit = {

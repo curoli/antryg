@@ -1,7 +1,7 @@
 package antryg.portal.sql
 
 import antryg.portal.cql.VariantFinderFacade.VariantCoreData
-import antryg.portal.sql.PortalSqlSchema.VariantMainTable
+import antryg.portal.sql.PortalSqlSchema.{CommonCols, VariantMainTable}
 import scalikejdbc.interpolation.SQLSyntax
 import scalikejdbc.{HasExtractor, SQLToOption, SQLToTraversable, scalikejdbcSQLInterpolationImplicitDef}
 
@@ -50,5 +50,25 @@ object PortalSqlQueries {
       map(row => CohortPhenoTableInfo(row.string("TBL"), row.string("DATASET"), row.string("PH"))).headOption()
   }
 
+  case class CohortPhenoRow(variantId: String, values: Map[String, Double])
+
+  def asDoubleOption(any: Any): Option[Double] = {
+    any match {
+      case number: Double | Float | Int | Long | Char | Short | Byte => Some(number.doubleValue())
+      case _ => None
+    }
+  }
+
+  def selectFromCohortPhenoTable(table: String): SQLToTraversable[CohortPhenoRow, HasExtractor] = {
+    val tableToken = SQLSyntax.createUnsafely(table)
+    val sql = sql"select * from $tableToken"
+    sql.fetchSize(fetchSize).map { row =>
+      val variantId = row.string(CommonCols.variantId)
+      val values = row.toMap().mapValues(asDoubleOption).collect {
+        case (key, Some(value)) => (key, value)
+      }
+      CohortPhenoRow(variantId, values)
+    }
+  }
 
 }
