@@ -52,6 +52,7 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
     val tranche = CohortPhenoTranche(cohort, pheno)
     reporter.sendingDataQueryToSql(tranche)
     reporter.sendingDataInsertsToCassandra(tranche)
+    variantFinderFacade.addCohortPhenoCol(cohort, pheno)
     var count: Long = 0L
     sqlDb.queryReadOnly(PortalSqlQueries.selectFromCohortPhenoTable(table)).foreach { row =>
       val variantId = row.variantId

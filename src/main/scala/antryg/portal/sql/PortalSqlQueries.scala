@@ -54,7 +54,13 @@ object PortalSqlQueries {
 
   def asDoubleOption(any: Any): Option[Double] = {
     any match {
-      case number: Double | Float | Int | Long | Char | Short | Byte => Some(number.doubleValue())
+      case double: Double => Some(double)
+      case float: Float => Some(float.doubleValue())
+      case int: Int => Some(int.doubleValue())
+      case long: Long => Some(long.doubleValue())
+      case char: Char => Some(char.toInt.doubleValue())
+      case short: Short => Some(short.doubleValue())
+      case byte: Byte => Some(byte.doubleValue())
       case _ => None
     }
   }
@@ -68,7 +74,7 @@ object PortalSqlQueries {
         case (key, Some(value)) => (key, value)
       }
       CohortPhenoRow(variantId, values)
-    }
+    }.traversable()
   }
 
 }
