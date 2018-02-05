@@ -17,7 +17,7 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
 
   def loadVariantMainTable(): Unit = {
     reporter.sendingDataQueryToSql(CoreTranche)
-    val selectLimitOpt = Some(20000000)
+    val selectLimitOpt = None
     reporter.sendingDataInsertsToCassandra(CoreTranche)
     var count: Long = 0L
     val visitor: WrappedResultSet => Unit = { row =>
@@ -32,7 +32,7 @@ class VariantFinderLoader(sqlDb: SqlDb, variantFinderFacade: VariantFinderFacade
     reporter.doneLoadingData(CoreTranche)
   }
 
-  def getVersions(): Set[String] = sqlDb.queryReadOnly(PortalSqlQueries.selectMetaDataVersions).toSet
+  def queryVersions(): Set[String] = sqlDb.queryReadOnly(PortalSqlQueries.selectMetaDataVersions).toSet
 
   def getCohortPhenoTablesForVersion(version: String): Seq[CohortPhenoTableInfo] =
     sqlDb.queryReadOnly(PortalSqlQueries.selectCohortPhenoByVersion(version)).toList

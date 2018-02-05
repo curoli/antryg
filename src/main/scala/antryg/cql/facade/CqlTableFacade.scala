@@ -22,12 +22,14 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
   def createIfNeeded(): Unit = if (!exists) create()
 
   def addCol(col: CqlCol): Unit = {
-      createIfNeeded()
-      session.execute(AlterTableAddCol(keyspace.name, name, col))
-      schema :+= col
+    createIfNeeded()
+    session.execute(AlterTableAddCol(keyspace.name, name, col))
+    schema :+= col
   }
 
-  def addColIfNeeded(col: CqlCol): Unit = if (!schema.hasCol(col.name)) {addCol(col) }
+  def addColIfNeeded(col: CqlCol): Unit = if (!schema.hasCol(col.name)) {
+    addCol(col)
+  }
 
   def addColsAsNeeded(cols: Iterable[CqlCol]): Unit = cols.foreach(addColIfNeeded)
 
@@ -42,4 +44,9 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
 
   def dropIfNeeded(): Unit = if (exists) drop()
 
+}
+
+object CqlTableFacade {
+  def apply(keyspace: KeyspaceFacade, schema: CqlTableSchema): CqlTableFacade =
+    new CqlTableFacade(keyspace, schema.name, schema.key, schema.otherCols)
 }

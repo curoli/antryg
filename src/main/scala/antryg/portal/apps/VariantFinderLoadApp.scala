@@ -61,14 +61,13 @@ object VariantFinderLoadApp extends App {
               val source = args(1)
               source match {
                 case "core" => Right(LoadCore)
-                case "cohort" => {
+                case "cohort" =>
                   if (args.size < 3) {
                     Left("No table specified.")
                   } else {
                     val table = args(2)
                     Right(LoadCohort(table))
                   }
-                }
                 case _ => Left(s"Unknown source '$source'")
               }
             }
@@ -118,7 +117,7 @@ object VariantFinderLoadApp extends App {
   val menuChoiceEither = MenuChoice.fromArgs(args)
   menuChoiceEither match {
     case Left(message) => wrongArgs(message)
-    case Right(menuChoice) => {
+    case Right(menuChoice) =>
       val session = CqlSessionFactory.LocalFactory.session
       val replication = Replication.SimpleStrategy(1)
       val variantFinderFacade = new VariantFinderFacade(session, replication)
@@ -129,7 +128,7 @@ object VariantFinderLoadApp extends App {
       menuChoice match {
         case LoadCore => variantFinderLoader.loadVariantMainTable()
         case ShowVersions =>
-          println(variantFinderLoader.getVersions().to[Seq].sortBy(str => str).mkString(", "))
+          println(variantFinderLoader.queryVersions().to[Seq].sortBy(str => str).mkString(", "))
         case ShowTables(version) =>
           println(variantFinderLoader.getCohortPhenoTablesForVersion(version).map(tableInfoToString)
             .mkString("\n"))
@@ -144,7 +143,6 @@ object VariantFinderLoadApp extends App {
       }
       sqlDb.close()
       session.close()
-    }
   }
   println("Bye!")
 }

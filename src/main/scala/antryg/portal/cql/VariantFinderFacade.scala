@@ -7,19 +7,18 @@ import antryg.cql.facade.{CqlTableFacade, KeyspaceFacade}
 import VariantFinderSchema.Cols
 import antryg.portal.cql.VariantFinderFacade.{VariantCohortData, VariantCoreData}
 import com.datastax.driver.core.DataType
+import com.datastax.driver.core.exceptions.InvalidQueryException
 
 class VariantFinderFacade(val session: CqlSession, replication: Replication) {
 
   val keyspace: KeyspaceFacade = new KeyspaceFacade(session, VariantFinderSchema.keyspaceName, replication)
   val variantTable: CqlTableFacade =
-    new CqlTableFacade(
-      keyspace = keyspace,
-      name = VariantFinderSchema.TableNames.variantTable,
-      primaryKey = PrimaryKey(Seq(VariantFinderSchema.Cols.variantId), Seq.empty),
-      otherCols = Seq(Cols.chromosome, Cols.position)
-    )
+    CqlTableFacade(keyspace, VariantFinderSchema.minimal.variantTable)
+  val variantValueIndexTable: CqlTableFacade =
+    CqlTableFacade(keyspace, VariantFinderSchema.minimal.variantValueIndexTable)
 
   variantTable.createIfNeeded()
+  variantValueIndexTable.createIfNeeded()
 
   def insertVariantCoreData(coreData: VariantCoreData): Unit = {
     val values = Map(
@@ -36,17 +35,31 @@ class VariantFinderFacade(val session: CqlSession, replication: Replication) {
 
   def addCohortPhenoCol(cohort: String, pheno: String): Unit = {
     val cohortPhenoCol = getCohortPhenoCol(cohort, pheno)
-    variantTable.addCol(cohortPhenoCol)
+    try {
+      variantTable.addCol(cohortPhenoCol)
+    } catch {
+      case ex: InvalidQueryException if ex.getMessage.contains("conflicts with an existing column") => ()
+    }
   }
 
 
   def insertVariantCohortData(cohortData: VariantCohortData): Unit = {
     val cohortPhenoCol = getCohortPhenoCol(cohortData.cohort, cohortData.pheno)
-    val row: Map[String, Any] = Map(
+    val variantRow: Map[String, Any] = Map(
       Cols.variantId -> cohortData.variantId,
       cohortPhenoCol -> cohortData.values
     ).map { case (key, value) => (key.name, value) }
-    variantTable.insert(row)
+    variantTable.insert(variantRow)
+    for ((valueName, value) <- cohortData.values) {
+      val variantValueIndexRow: Map[String, Any] = Map(
+        Cols.cohort -> cohortData.cohort,
+        Cols.phenotype -> cohortData.pheno,
+        Cols.valueName -> valueName,
+        Cols.value -> value,
+        Cols.variantId -> cohortData.variantId
+      ).map { case (key, rowValue) => (key.name, rowValue) }
+      variantValueIndexTable.insert(variantValueIndexRow)
+    }
   }
 
 }
