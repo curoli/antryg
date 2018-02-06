@@ -1,8 +1,9 @@
 package antryg.cql.facade
 
-import antryg.cql.{CqlCol, CqlSession, CqlTableSchema}
 import antryg.cql.CqlTableSchema.PrimaryKey
-import antryg.cql.builder.{AlterTableAddCol, CreateTable, DropTable, Insert}
+import antryg.cql.builder.{AlterTableAddCol, CreateTable, DropTable, Insert, Select}
+import antryg.cql.{CqlCol, CqlSession, CqlTableSchema}
+import com.datastax.driver.core.ResultSet
 
 class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primaryKey: PrimaryKey,
                      otherCols: Seq[CqlCol] = Seq.empty) {
@@ -34,7 +35,11 @@ class CqlTableFacade(val keyspace: KeyspaceFacade, val name: String, val primary
   def addColsAsNeeded(cols: Iterable[CqlCol]): Unit = cols.foreach(addColIfNeeded)
 
   def insert(values: Map[String, Any]): Unit = {
-    val result = session.execute(Insert(keyspace.name, name, values))
+    session.execute(Insert(keyspace.name, name, values))
+  }
+
+  def select(selectedCols: Select.SelectedCols, clauses: Seq[Select.Clause]): ResultSet = {
+    session.execute(Select(keyspace.name, name, selectedCols, clauses))
   }
 
   def drop(): Unit = {

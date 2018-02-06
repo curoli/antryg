@@ -2,11 +2,13 @@ package antryg.portal.apps
 
 import antryg.cql.CqlSessionFactory
 import antryg.cql.builder.Replication
-import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, ShowTables, ShowVersions}
+import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QuerySimpleRange, ShowTables, ShowVersions}
 import antryg.portal.cql.VariantFinderFacade
 import antryg.portal.sql.PortalSqlQueries.CohortPhenoTableInfo
 import antryg.portal.sqltocql.{VariantFinderLoader, VariantIdSampler}
 import antryg.sql.SqlDb
+
+import scala.util.{Failure, Success, Try}
 
 object VariantFinderLoadApp extends App {
 
@@ -45,6 +47,9 @@ object VariantFinderLoadApp extends App {
     case class InfoTable(table: String) extends MenuChoice
 
     case class LoadCohort(table: String) extends MenuChoice
+
+    case class QuerySimpleRange(cohort: String, phenotype: String, valueName: String, min: Double, max: Double)
+      extends MenuChoice
 
     case object PrintHelp extends MenuChoice
 
@@ -104,6 +109,33 @@ object VariantFinderLoadApp extends App {
                 case _ => Left(s"Don't know how to show info on '$itemToInfo'")
               }
             }
+          case "query" =>
+            if (args.size < 2) {
+              Left("Did not specify what kind of query")
+            } else {
+              val queryType = args(1)
+              queryType match {
+                case "simplerange" =>
+                  if (args.size < 7) {
+                    Left("For simplerange query, need to specify cohort, phenotype, value name, min and max")
+                  } else {
+                    val cohort = args(2)
+                    val phenotype = args(3)
+                    val valueName = args(4)
+                    val minString = args(5)
+                    Try(minString.toDouble) match {
+                      case Failure(ex) => Left(s"Invalid arg '$minString' for min: ${ex.getMessage}")
+                      case Success(min) =>
+                        val maxString = args(6)
+                        Try(maxString.toDouble) match {
+                          case Failure(ex) => Left(s"Invalid arg '$maxString' for max: ${ex.getMessage}")
+                          case Success(max) => Right(QuerySimpleRange(cohort, phenotype, valueName, min, max))
+                        }
+                    }
+                  }
+                case _ => Left(s"Do not know how to do query '$queryType'")
+              }
+            }
           case "help" => Right(PrintHelp)
           case _ => Left(s"Unknown command '$command'")
         }
@@ -139,6 +171,9 @@ object VariantFinderLoadApp extends App {
             case None => println(s"Could not get table info for table '$table'")
           }
         case LoadCohort(table) => variantFinderLoader.loadCohortPhenoTable(table)
+        case QuerySimpleRange(cohort, phenotype, valueName, min, max) =>
+          val variantsIter = variantFinderFacade.variantsByValueRange(cohort, phenotype, valueName, min, max)
+          println(s"Variants found: ${variantsIter.mkString(", ")}")
         case PrintHelp => printHelp()
       }
       sqlDb.close()

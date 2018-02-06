@@ -2,12 +2,13 @@ package antryg.portal.cql
 
 import antryg.cql.{CqlCol, CqlSession}
 import antryg.cql.CqlTableSchema.PrimaryKey
-import antryg.cql.builder.Replication
+import antryg.cql.builder.{Replication, Select}
 import antryg.cql.facade.{CqlTableFacade, KeyspaceFacade}
 import VariantFinderSchema.Cols
 import antryg.portal.cql.VariantFinderFacade.{VariantCohortData, VariantCoreData}
 import com.datastax.driver.core.DataType
 import com.datastax.driver.core.exceptions.InvalidQueryException
+import scala.collection.JavaConverters.asScalaIteratorConverter
 
 class VariantFinderFacade(val session: CqlSession, replication: Replication) {
 
@@ -60,6 +61,18 @@ class VariantFinderFacade(val session: CqlSession, replication: Replication) {
       ).map { case (key, rowValue) => (key.name, rowValue) }
       variantValueIndexTable.insert(variantValueIndexRow)
     }
+  }
+
+  def variantsByValueRange(cohort: String, phenotype: String, valueName: String,
+                           min: Double, max: Double): Iterator[String] = {
+    val cohortClause = Select.Equals(Cols.cohort.name, cohort)
+    val phenotypeClause = Select.Equals(Cols.phenotype.name, phenotype)
+    val valueNameClause = Select.Equals(Cols.valueName.name, valueName)
+    val minClause = Select.GreaterOrEqualsTo(Cols.value.name, min)
+    val maxClause = Select.LessOrEqualsTo(Cols.value.name, max)
+    val clauses = Seq(cohortClause, phenotypeClause, valueNameClause, minClause, maxClause)
+    val resultSet = variantValueIndexTable.select(Select.CertainCols(Cols.variantId.name), clauses)
+    resultSet.iterator().asScala.map(_.getString(Cols.variantId.name))
   }
 
 }
