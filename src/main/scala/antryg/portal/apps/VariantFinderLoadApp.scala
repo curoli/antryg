@@ -2,7 +2,7 @@ package antryg.portal.apps
 
 import antryg.cql.CqlSessionFactory
 import antryg.cql.builder.Replication
-import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QuerySimpleRange, ShowTables, ShowVersions}
+import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QuerySimpleRange, QueryVariantCohort, ShowTables, ShowVersions}
 import antryg.portal.cql.VariantFinderFacade
 import antryg.portal.sql.PortalSqlQueries.CohortPhenoTableInfo
 import antryg.portal.sqltocql.{VariantFinderLoader, VariantIdSampler}
@@ -20,6 +20,9 @@ object VariantFinderLoadApp extends App {
          |  show versions   (show available versions)
          |  show tables <version>   (show available tables for version)
          |  info table <table>   (information about table)
+         |  query simplerange <cohort> <phenotype> <valueName> <min> <max> (finds all variants for value
+         |                                                                  within range)
+         |  query cohortvariants <cohort> <phenotype> <variantId>*  (look up cohort data for variants)
          |  help   (display usage)
       """.stripMargin)
   }
@@ -50,6 +53,8 @@ object VariantFinderLoadApp extends App {
 
     case class QuerySimpleRange(cohort: String, phenotype: String, valueName: String, min: Double, max: Double)
       extends MenuChoice
+
+    case class QueryVariantCohort(cohort: String, phenotype: String, variantIds: Seq[String]) extends MenuChoice
 
     case object PrintHelp extends MenuChoice
 
@@ -133,6 +138,15 @@ object VariantFinderLoadApp extends App {
                         }
                     }
                   }
+                case "cohortvariants" =>
+                  if (args.size < 5) {
+                    Left("Need to specify cohort, phenotype and one or more variant ids.")
+                  } else {
+                    val cohort = args(2)
+                    val phenotype = args(3)
+                    val variantIds = args.toSeq.drop(4)
+                    Right(QueryVariantCohort(cohort, phenotype, variantIds))
+                  }
                 case _ => Left(s"Do not know how to do query '$queryType'")
               }
             }
@@ -172,8 +186,13 @@ object VariantFinderLoadApp extends App {
           }
         case LoadCohort(table) => variantFinderLoader.loadCohortPhenoTable(table)
         case QuerySimpleRange(cohort, phenotype, valueName, min, max) =>
-          val variantsIter = variantFinderFacade.variantsByValueRange(cohort, phenotype, valueName, min, max)
+          val variantsIter =
+            variantFinderFacade.selectVariantsByValueRange(cohort, phenotype, valueName, min, max)
           println(s"Variants found: ${variantsIter.mkString(", ")}")
+        case QueryVariantCohort(cohort, phenotype, variantIds) =>
+          val variantCohortIter =
+            variantFinderFacade.selectVariantsCoreCohortData(variantIds.iterator, cohort, phenotype)
+          variantCohortIter.foreach(println)
         case PrintHelp => printHelp()
       }
       sqlDb.close()

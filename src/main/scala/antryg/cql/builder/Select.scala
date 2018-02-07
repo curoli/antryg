@@ -71,4 +71,8 @@ object Select {
     override def toJClause: JClause = QueryBuilder.gte(column, value)
   }
 
+  case class In(column: String, values: Seq[Any]) extends Clause {
+    override def toJClause: JClause = QueryBuilder.in(column, values.map(_.asInstanceOf[AnyRef]).toArray: _*)
+  }
+
 }

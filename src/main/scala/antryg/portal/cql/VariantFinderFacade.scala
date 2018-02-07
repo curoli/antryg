@@ -5,9 +5,11 @@ import antryg.cql.CqlTableSchema.PrimaryKey
 import antryg.cql.builder.{Replication, Select}
 import antryg.cql.facade.{CqlTableFacade, KeyspaceFacade}
 import VariantFinderSchema.Cols
-import antryg.portal.cql.VariantFinderFacade.{VariantCohortData, VariantCoreData}
+import antryg.portal.cql.VariantFinderFacade.{VariantCohortData, VariantCoreCohortData, VariantCoreData}
 import com.datastax.driver.core.DataType
 import com.datastax.driver.core.exceptions.InvalidQueryException
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 class VariantFinderFacade(val session: CqlSession, replication: Replication) {
@@ -63,8 +65,8 @@ class VariantFinderFacade(val session: CqlSession, replication: Replication) {
     }
   }
 
-  def variantsByValueRange(cohort: String, phenotype: String, valueName: String,
-                           min: Double, max: Double): Iterator[String] = {
+  def selectVariantsByValueRange(cohort: String, phenotype: String, valueName: String,
+                                 min: Double, max: Double): Iterator[String] = {
     val cohortClause = Select.Equals(Cols.cohort.name, cohort)
     val phenotypeClause = Select.Equals(Cols.phenotype.name, phenotype)
     val valueNameClause = Select.Equals(Cols.valueName.name, valueName)
@@ -75,6 +77,30 @@ class VariantFinderFacade(val session: CqlSession, replication: Replication) {
     resultSet.iterator().asScala.map(_.getString(Cols.variantId.name))
   }
 
+  val variantIdGroupSize: Int = 10
+
+  def selectVariantsCoreCohortData(variantIdIter: Iterator[String], cohort: String,
+                                   phenotype: String): Iterator[VariantCoreCohortData] = {
+    val cohortPhenoCol = getCohortPhenoCol(cohort, phenotype)
+    val selectedCols =
+      Select.CertainCols(Cols.variantId.name, Cols.chromosome.name, Cols.position.name, cohortPhenoCol.name)
+    val variantIdGroupIter = variantIdIter.grouped(variantIdGroupSize)
+    variantIdGroupIter.flatMap { variantIdGroup =>
+      val variantIdGroupClause = Select.In(Cols.variantId.name, variantIdGroup)
+      val resultSet = variantTable.select(selectedCols, Seq(variantIdGroupClause))
+      resultSet.iterator().asScala.map { row =>
+        val variantId = row.getString(Cols.variantId.name)
+        val chromosome = row.getString(Cols.chromosome.name)
+        val position = row.getLong(Cols.position.name)
+        val values =
+          row.getMap[String, java.lang.Double](cohortPhenoCol.name, classOf[String], classOf[java.lang.Double])
+            .asScala.toMap.asInstanceOf[Map[String, Double]]
+        VariantCoreCohortData(variantId, chromosome, position, cohort, phenotype, values)
+      }
+    }
+  }
+
+
 }
 
 object VariantFinderFacade {
@@ -82,6 +108,9 @@ object VariantFinderFacade {
   case class VariantCoreData(variantId: String, chromosome: String, position: Long)
 
   case class VariantCohortData(variantId: String, cohort: String, pheno: String, values: Map[String, Double])
+
+  case class VariantCoreCohortData(variantId: String, chromosome: String, position: Long,
+                                   cohort: String, pheno: String, values: Map[String, Double])
 
 }
 
