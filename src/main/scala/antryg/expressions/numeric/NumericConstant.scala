@@ -3,8 +3,8 @@ package antryg.expressions.numeric
 import antryg.expressions.logical.BooleanVariable
 import antryg.expressions.{Constant, Variable}
 
-case class NumericConstant(value: Double) extends NumericExpression with Constant {
-  override def variables: Set[Variable] = Set.empty
+case class NumericConstant(value: Double) extends Constant[Double] {
+  override def variables: Set[Variable[_]] = Set.empty
 
   override def numericVariables: Set[NumericVariable] = Set.empty
 
