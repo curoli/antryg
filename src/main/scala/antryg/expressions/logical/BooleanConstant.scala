@@ -1,9 +1,11 @@
 package antryg.expressions.logical
 
 import antryg.expressions.numeric.NumericVariable
-import antryg.expressions.{Constant, Variable}
+import antryg.expressions.{Constant, Expression, Variable}
 
 case class BooleanConstant(value: Boolean) extends Constant[Boolean] {
+  override def theType: Expression.Type = Expression.logical
+
   override def valueOpt: Some[Boolean] = Some(value)
 
   override def variables: Set[Variable[_]] = Set.empty

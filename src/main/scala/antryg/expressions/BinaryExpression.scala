@@ -5,6 +5,8 @@ import antryg.expressions.numeric.NumericVariable
 
 case class BinaryExpression[L, R, +T](lhs: Expression[L], op: BinaryOperator[L, R, T], rhs: Expression[R])
   extends Expression[T] {
+  override def theType: Expression.Type = op.theType
+
   override def asString: String = {
     val lhsString = lhs match {
       case BinaryExpression(_, lhsOp, _) if lhsOp.precedence < op.precedence => s"(${lhs.asString})"
@@ -37,6 +39,5 @@ case class BinaryExpression[L, R, +T](lhs: Expression[L], op: BinaryOperator[L, 
 
   override def bind(numberValues: Map[String, Double], booleanValues: Map[String, Boolean]): Expression[T] =
     copy(lhs = lhs.bind(numberValues, booleanValues), rhs = rhs.bind(numberValues, booleanValues))
-
 }
 
