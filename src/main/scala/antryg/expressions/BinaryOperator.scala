@@ -1,18 +1,28 @@
 package antryg.expressions
 
-trait BinaryOperator[L, R, +T] extends ((L, R) => T) {
+trait BinaryOperator[L, R, +T] extends ((L, R) => T) with BinaryOperator.Base {
   override def apply(lhs: L, rhs: R): T
 
-  def theType: Expression.Type
+  override def theType: Expression.Type
 
-  def symbol: String
+  override def symbol: String
 
-  def precedence: Int
+  override def precedence: Int
 
   override def toString: String = symbol
 }
 
 object BinaryOperator {
+
+  trait Base {
+    def theType: Expression.Type
+
+    def symbol: String
+
+    def precedence: Int
+
+    override def toString: String = symbol
+  }
 
   object Precedences {
     val timesDivideBy = 5
@@ -82,7 +92,7 @@ object BinaryOperator {
   }
 
   object NumericalComparisonOperator {
-    val equals: NumericalComparisonOperator = new NumericalComparisonOperator {
+    val equalTo: NumericalComparisonOperator = new NumericalComparisonOperator {
       override def symbol: String = "="
 
       override def apply(lhs: Double, rhs: Double): Boolean = lhs == rhs
