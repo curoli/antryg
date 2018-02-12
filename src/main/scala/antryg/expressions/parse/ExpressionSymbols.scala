@@ -3,7 +3,7 @@ package antryg.expressions.parse
 import antryg.expressions.BinaryOperator
 
 case class ExpressionSymbols(binaryOperators: Map[String, BinaryOperator.Base],
-                             openBrackets: Set[String], closeBracket: Set[String] ) {
+                             openBrackets: Set[String], closeBrackets: Set[String] ) {
 
 }
 

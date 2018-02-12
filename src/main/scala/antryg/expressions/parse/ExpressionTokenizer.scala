@@ -1,7 +1,12 @@
 package antryg.expressions.parse
 
+import java.util.regex.Pattern
+
 import antryg.expressions.BinaryOperator
 import antryg.expressions.parse.ExpressionTokenizer.Token
+import antryg.expressions.parse.ExpressionTokenizer.TokenType.ScanResult
+
+import scala.util.Try
 
 case class ExpressionTokenizer(symbols: ExpressionSymbols) {
 
@@ -14,13 +19,28 @@ case class ExpressionTokenizer(symbols: ExpressionSymbols) {
 object ExpressionTokenizer {
 
   trait TokenType {
-    def scan(string: String): Option[Token]
+    def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult]
 
     def canBeSucceededBy: Set[TokenType]
   }
 
   object TokenType {
-    def firstTokenCanBe: Set[TokenType] = Set(IdentifierType, LiteralType, OpenBracketType)
+
+    case class ScanResult(token: Token, remainder: String)
+
+    def possibleStartTokens: Set[TokenType] = Set(IdentifierType, LiteralType, OpenBracketType)
+
+    def chopOffLongestAtStart(string: String, symbols: Iterable[String]): Option[(String, String)] = {
+      val matchingSymbols = symbols.filter(string.startsWith(_))
+      if (matchingSymbols.nonEmpty) {
+        val sizeMax = matchingSymbols.map(_.size).max
+        val matchingSymbol = matchingSymbols.filter(_.size == sizeMax).head
+        val remainder = string.substring(sizeMax)
+        Some((matchingSymbol, remainder))
+      } else {
+        None
+      }
+    }
   }
 
   trait OperandType extends TokenType {
@@ -28,27 +48,69 @@ object ExpressionTokenizer {
   }
 
   object IdentifierType extends OperandType {
-    override def scan(string: String): Option[Token] = ???
+    override def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult] = {
+      if (Character.isJavaIdentifierStart(string.charAt(0))) {
+        var size: Int = 1
+        while (Character.isJavaIdentifierStart(string.charAt(size))) {
+          size += 1
+        }
+        Some(ScanResult(Identifier(string.substring(0, size)), string.substring(size)))
+      } else {
+        None
+      }
+    }
   }
 
   object LiteralType extends OperandType {
-    override def scan(string: String): Option[Token] = ???
+    val startsWithNumberPattern: Pattern = Pattern.compile("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")
+
+    override def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult] = {
+      val matcher = startsWithNumberPattern.matcher(string)
+      if (matcher.find()) {
+        val numberString = matcher.group()
+        val remainder = string.substring(numberString.size)
+        Try {
+          numberString.toDouble
+        }.fold(_ => None, value => Some(ScanResult(Literal(numberString, value), remainder)))
+      } else {
+        None
+      }
+    }
   }
 
   object BinaryOperatorType extends TokenType {
-    override def scan(string: String): Option[Token] = ???
+    override def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult] = {
+      val biOpSymbols = symbols.binaryOperators.keys.filter(string.startsWith(_))
+      TokenType.chopOffLongestAtStart(string, biOpSymbols).map {
+        case (biOpSymbol, remainder) =>
+          val token = BinaryOperatorToken(biOpSymbol, symbols.binaryOperators(biOpSymbol))
+          ScanResult(token, remainder)
+      }
+    }
 
     override def canBeSucceededBy: Set[TokenType] = Set(IdentifierType, LiteralType, OpenBracketType)
   }
 
   object OpenBracketType extends TokenType {
-    override def scan(string: String): Option[Token] = ???
+    override def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult] = {
+      TokenType.chopOffLongestAtStart(string, symbols.openBrackets).map {
+        case (openBracketSymbol, remainder) =>
+          val token = OpenBracket(openBracketSymbol)
+          ScanResult(token, remainder)
+      }
+    }
 
-    override def canBeSucceededBy: Set[TokenType] = TokenType.firstTokenCanBe
+    override def canBeSucceededBy: Set[TokenType] = TokenType.possibleStartTokens
   }
 
   object CloseBracketType extends TokenType {
-    override def scan(string: String): Option[Token] = ???
+    override def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult] = {
+      TokenType.chopOffLongestAtStart(string, symbols.closeBrackets).map {
+        case (closeBracketSymbol, remainder) =>
+          val token = CloseBracket(closeBracketSymbol)
+          ScanResult(token, remainder)
+      }
+    }
 
     override def canBeSucceededBy: Set[TokenType] = Set(BinaryOperatorType, CloseBracketType)
   }
