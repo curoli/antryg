@@ -3,15 +3,30 @@ package antryg.expressions.parse
 import java.util.regex.Pattern
 
 import antryg.expressions.BinaryOperator
-import antryg.expressions.parse.ExpressionTokenizer.Token
+import antryg.expressions.parse.ExpressionTokenizer.{Token, TokenType}
 import antryg.expressions.parse.ExpressionTokenizer.TokenType.ScanResult
 
 import scala.util.Try
 
 case class ExpressionTokenizer(symbols: ExpressionSymbols) {
 
-  def tokenize(string: String): Seq[Token] = {
-    ???
+  def tokenize(string: String): Either[String, Seq[Token]] = {
+    var remainder: String = string.trim
+    var tokens: Seq[Token] = Seq.empty
+    var possibleNextTypes: Set[TokenType] = TokenType.possibleStartTokens
+    var issueOpt: Option[String] = None
+    while(issueOpt.isEmpty && remainder.nonEmpty) {
+      val scanResults = possibleNextTypes.flatMap(_.scan(remainder, symbols))
+      if(scanResults.nonEmpty) {
+        ??? // TODO
+      } else {
+        issueOpt = Some("Problem!") // TODO
+      }
+    }
+    issueOpt match {
+      case Some(issue) => Left(issue)
+      case None => Right(tokens)
+    }
   }
 
 }
