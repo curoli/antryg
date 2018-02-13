@@ -90,7 +90,7 @@ object ExpressionTokenizer {
     override def scan(string: String, symbols: ExpressionSymbols): Option[ScanResult] = {
       if (Character.isJavaIdentifierStart(string.charAt(0))) {
         var size: Int = 1
-        while (size < string.size && Character.isJavaIdentifierStart(string.charAt(size))) {
+        while (size < string.size && Character.isJavaIdentifierPart(string.charAt(size))) {
           size += 1
         }
         Some(ScanResult(Identifier(string.substring(0, size)), string.substring(size)))
