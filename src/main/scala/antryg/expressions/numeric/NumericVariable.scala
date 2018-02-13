@@ -4,7 +4,7 @@ import antryg.expressions.{Expression, Variable}
 import antryg.expressions.logical.BooleanVariable
 
 case class NumericVariable(name: String) extends Variable[Double] {
-  override def theType: Expression.Type = Expression.numeric
+  override def theType: Expression.Type = Expression.Numeric
 
   override def variables: Set[Variable[_]] = Set[Variable[_]](this)
 

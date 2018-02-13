@@ -5,6 +5,10 @@ trait BinaryOperator[L, R, +T] extends ((L, R) => T) with BinaryOperator.Base {
 
   override def theType: Expression.Type
 
+  override def lhsType: Expression.Type
+
+  override def rhsType: Expression.Type
+
   override def symbol: String
 
   override def precedence: Int
@@ -17,11 +21,17 @@ object BinaryOperator {
   trait Base {
     def theType: Expression.Type
 
+    def lhsType: Expression.Type
+
+    def rhsType: Expression.Type
+
     def symbol: String
 
     def precedence: Int
 
     override def toString: String = symbol
+
+    def as[L, R, T]: BinaryOperator[L, R, T] = this.asInstanceOf[BinaryOperator[L, R, T]]
   }
 
   object Precedences {
@@ -32,7 +42,7 @@ object BinaryOperator {
   }
 
   trait ArithmeticOperator extends BinaryOperator[Double, Double, Double] {
-    def theType: Expression.Type = Expression.numeric
+    def theType: Expression.Type = Expression.Numeric
   }
 
   object ArithmeticOperator {
@@ -67,7 +77,7 @@ object BinaryOperator {
   }
 
   trait BooleanOperator extends BinaryOperator[Boolean, Boolean, Boolean] {
-    def theType: Expression.Type = Expression.logical
+    def theType: Expression.Type = Expression.Logical
 
     override def precedence: Int = Precedences.andOr
   }
@@ -86,7 +96,7 @@ object BinaryOperator {
   }
 
   trait NumericalComparisonOperator extends BinaryOperator[Double, Double, Boolean] {
-    def theType: Expression.Type = Expression.logical
+    def theType: Expression.Type = Expression.Logical
 
     override def precedence: Int = Precedences.comparison
   }

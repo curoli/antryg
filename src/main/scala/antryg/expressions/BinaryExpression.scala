@@ -41,3 +41,21 @@ case class BinaryExpression[L, R, +T](lhs: Expression[L], op: BinaryOperator[L, 
     copy(lhs = lhs.bind(numberValues, booleanValues), rhs = rhs.bind(numberValues, booleanValues))
 }
 
+object BinaryExpression {
+  def createAs[L, R, T](lhs: Expression.Base, op: BinaryOperator.Base, rhs: Expression.Base):
+  Either[String, BinaryExpression[L, R, T]] = {
+    if (lhs.theType != op.lhsType) {
+      Left(s"Left expression has type ${lhs.theType}, but operator ${op.symbol} needs ${op.lhsType}")
+    } else {
+      if (rhs.theType != op.rhsType) {
+        Left(s"Right expression has type ${rhs.theType}, but operator ${op.symbol} needs ${op.rhsType}")
+      } else {
+        Right(BinaryExpression[L, R, T](lhs.as[L], op.as[L, R, T], rhs.as[R]))
+      }
+    }
+  }
+
+  def create(lhs: Expression.Base, op: BinaryOperator.Base, rhs: Expression.Base):
+  Either[String, Expression.Base] = createAs[Any, Any, Any](lhs, op, rhs)
+}
+
