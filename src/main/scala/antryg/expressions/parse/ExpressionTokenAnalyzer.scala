@@ -7,7 +7,7 @@ import antryg.expressions.parse.ExpressionTokenizer.{BinaryOperatorToken, CloseB
 
 object ExpressionTokenAnalyzer {
 
-  trait AnalysisResult
+  sealed trait AnalysisResult
 
   case class AnalysisFailure(tokenCursor: TokenCursor, issues: Seq[Issue]) extends AnalysisResult
 
