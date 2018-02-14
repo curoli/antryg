@@ -70,7 +70,7 @@ object ExpressionTokenAnalyzer {
           (Some(BinaryOperatorToken(_, _, opLeft)), Some(ExpressionToken(_, posLeft, expLeft)),
           BinaryOperatorToken(_, _, op), Some(ExpressionToken(_, _, expRight)),
           Some(BinaryOperatorToken(_, _, opRight))) =>
-          if(opLeft.precedence > op.precedence) {
+          if(opLeft.precedence >= op.precedence) {
             MoreToDo(stepLeft.stepLeft)
           } else {
             if(op.precedence < opRight.precedence) {

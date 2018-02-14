@@ -42,7 +42,11 @@ object BinaryOperator {
   }
 
   trait ArithmeticOperator extends BinaryOperator[Double, Double, Double] {
-    def theType: Expression.Type = Expression.Numeric
+    override def theType: Expression.Type = Expression.Numeric
+
+    override def lhsType: Expression.Type = Expression.Numeric
+
+    override def rhsType: Expression.Type = Expression.Numeric
   }
 
   object ArithmeticOperator {
@@ -77,7 +81,11 @@ object BinaryOperator {
   }
 
   trait BooleanOperator extends BinaryOperator[Boolean, Boolean, Boolean] {
-    def theType: Expression.Type = Expression.Logical
+    override def theType: Expression.Type = Expression.Logical
+
+    override def lhsType: Expression.Type = Expression.Logical
+
+    override def rhsType: Expression.Type = Expression.Logical
 
     override def precedence: Int = Precedences.andOr
   }
@@ -96,7 +104,11 @@ object BinaryOperator {
   }
 
   trait NumericalComparisonOperator extends BinaryOperator[Double, Double, Boolean] {
-    def theType: Expression.Type = Expression.Logical
+    override def theType: Expression.Type = Expression.Logical
+
+    override def lhsType: Expression.Type = Expression.Numeric
+
+    override def rhsType: Expression.Type = Expression.Numeric
 
     override def precedence: Int = Precedences.comparison
   }
