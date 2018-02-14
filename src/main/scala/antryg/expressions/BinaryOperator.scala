@@ -37,8 +37,8 @@ object BinaryOperator {
   object Precedences {
     val timesDivideBy = 5
     val plusMinus = 4
-    val andOr = 3
-    val comparison = 2
+    val comparison = 3
+    val andOr = 2
   }
 
   trait ArithmeticOperator extends BinaryOperator[Double, Double, Double] {

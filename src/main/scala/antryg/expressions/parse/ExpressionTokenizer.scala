@@ -5,12 +5,38 @@ import java.util.regex.Pattern
 import antryg.expressions.numeric.{NumericConstant, NumericVariable}
 import antryg.expressions.parse.ExpressionParser.Issue
 import antryg.expressions.parse.ExpressionTokenizer.TokenType.ScanResult
-import antryg.expressions.parse.ExpressionTokenizer.{Token, TokenType, TokenizeResult}
+import antryg.expressions.parse.ExpressionTokenizer.{CloseBracket, OpenBracket, Token, TokenType, TokenizeResult}
 import antryg.expressions.{BinaryOperator, Expression}
 
 import scala.util.Try
 
 case class ExpressionTokenizer(symbols: ExpressionSymbols) {
+
+  def checkBrackets(tokens: Seq[Token]): Seq[Issue] = {
+    var issues: Seq[Issue] = Seq.empty
+    var depth: Int = 0
+    var lastOpeningBracketPos = 0
+    for (token <- tokens) {
+      token match {
+        case OpenBracket(_, _) =>
+          depth += 1
+          lastOpeningBracketPos = token.pos
+        case CloseBracket(_, pos) =>
+          depth -= 1
+          if(depth < 0) {
+            issues :+=
+              Issue("Closing bracket with no matching opening bracket", pos, Issue.Tokenization, isFatal = true)
+          }
+        case _ => ()
+      }
+    }
+    if(depth > 0) {
+      issues :+=
+        Issue("Opening bracket with no matching closing bracket", lastOpeningBracketPos, Issue.Tokenization,
+          isFatal = true)
+    }
+    issues
+  }
 
   def tokenize(string: String): TokenizeResult = {
     var remainder: String = string.trim
@@ -19,24 +45,22 @@ case class ExpressionTokenizer(symbols: ExpressionSymbols) {
     var issues: Seq[Issue] = Seq.empty
     if (remainder.isEmpty) {
       issues :+= Issue("string is empty", 0, Issue.Tokenization, isFatal = true)
-    } else {
-      var keepGoing: Boolean = true
-      while (keepGoing && remainder.nonEmpty) {
-        val pos = string.size - remainder.size
-        val scanResults = possibleNextTypes.flatMap(_.scan(remainder, pos, symbols))
-        if (scanResults.nonEmpty) {
-          val biggestTokenSize = scanResults.map(_.token.string.size).max
-          val bestResult = scanResults.filter(_.token.string.size == biggestTokenSize).head
-          val token = bestResult.token
-          tokens :+= token
-          remainder = bestResult.remainder.trim
-          possibleNextTypes = token.tokenType.canBeSucceededBy
-        } else {
-          issues :+= Issue("Cannot identify next token.", pos, Issue.Tokenization, isFatal = true)
-          keepGoing = false
-        }
+    }
+    while (issues.isEmpty && remainder.nonEmpty) {
+      val pos = string.size - remainder.size
+      val scanResults = possibleNextTypes.flatMap(_.scan(remainder, pos, symbols))
+      if (scanResults.nonEmpty) {
+        val biggestTokenSize = scanResults.map(_.token.string.size).max
+        val bestResult = scanResults.filter(_.token.string.size == biggestTokenSize).head
+        val token = bestResult.token
+        tokens :+= token
+        remainder = bestResult.remainder.trim
+        possibleNextTypes = token.tokenType.canBeSucceededBy
+      } else {
+        issues :+= Issue("Cannot identify next token.", pos, Issue.Tokenization, isFatal = true)
       }
     }
+    issues ++= checkBrackets(tokens)
     val pos = string.size - remainder.size
     TokenizeResult(string, tokens, issues, pos)
   }
