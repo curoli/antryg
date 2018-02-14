@@ -9,6 +9,12 @@ object ExpressionTokenAnalyzer {
 
   trait AnalysisResult
 
+  case class AnalysisFailure(tokenCursor: TokenCursor, issues: Seq[Issue]) extends AnalysisResult
+
+  case class AnalysisGotLogicalExpression(expression: Expression[Boolean]) extends AnalysisResult
+
+  case class AnalysisGotNumericalExpression(expression: Expression[Double]) extends AnalysisResult
+
   case class TokenCursor(tokensBefore: Seq[Token], currentToken: Token, tokensAfter: Seq[Token]) {
     def pos: Int = tokensBefore.size
 
@@ -50,6 +56,19 @@ object ExpressionTokenAnalyzer {
 
     def isOnBinaryOperator: Boolean = currentToken.isInstanceOf[BinaryOperatorToken]
 
+    def createBinaryExpression(lhs: Expression.Base, op: BinaryOperator.Base,
+                               rhs: Expression.Base, posLeft: Int): TokenCursor.Status = {
+      BinaryExpression.create(lhs, op, rhs) match {
+        case Left(message) => Failure(this, Seq(Issue(message, posLeft, Issue.Analysis, isFatal = true)))
+        case Right(expression) =>
+          MoreToDo(TokenCursor(
+            tokensBefore = tokensBefore.dropRight(1),
+            currentToken = ExpressionToken(expression.asString, posLeft, expression),
+            tokensAfter = tokensAfter.tail
+          ))
+      }
+    }
+
     def step: TokenCursor.Status = {
       (tokenLeftLeftOpt, tokenLeftOpt, currentToken, tokenRightOpt, tokenRightRightOpt) match {
         case (None, None, ExpressionToken(_, _, expression), None, None) =>
@@ -60,48 +79,88 @@ object ExpressionTokenAnalyzer {
         case (None, None, token: Token, None, None) =>
           val issue = Issue("Did not end up with an expression", token.pos, Issue.Analysis, isFatal = true)
           Failure(this, Seq(issue))
+        case (_, _, CloseBracket(_, _), _, _) => MoreToDo(stepLeft)
+        case (_, _, OpenBracket(_, _), _, _) => MoreToDo(stepRight)
         case (_, Some(OpenBracket(_, _)), ExpressionToken(_, _, _), Some(CloseBracket(_, _)), _) =>
           MoreToDo(copy(tokensBefore = tokensBefore.dropRight(1), tokensAfter = tokensAfter.tail))
         case
           (_, Some(BinaryOperatorToken(_, _, opLeft)), ExpressionToken(_, _, _),
           Some(BinaryOperatorToken(_, _, opRight)), _) =>
-          if(opLeft.precedence < opRight.precedence) MoreToDo(stepRight) else MoreToDo(stepLeft)
+          if (opLeft.precedence < opRight.precedence) MoreToDo(stepRight) else MoreToDo(stepLeft)
+        case (_, Some(BinaryOperatorToken(_, _, _)), ExpressionToken(_, _, _), _, _) => MoreToDo(stepLeft)
+        case (_, _, ExpressionToken(_, _, _), Some(BinaryOperatorToken(_, _, _)), _) => MoreToDo(stepRight)
+        case (_, Some(CloseBracket(_, _)), BinaryOperatorToken(_, _, _), _, _) => MoreToDo(stepLeft)
+        case (_, _, BinaryOperatorToken(_, _, _), Some(OpenBracket(_, _)), _) => MoreToDo(stepRight)
         case
           (Some(BinaryOperatorToken(_, _, opLeft)), Some(ExpressionToken(_, posLeft, expLeft)),
           BinaryOperatorToken(_, _, op), Some(ExpressionToken(_, _, expRight)),
           Some(BinaryOperatorToken(_, _, opRight))) =>
-          if(opLeft.precedence >= op.precedence) {
+          if (opLeft.precedence >= op.precedence) {
             MoreToDo(stepLeft.stepLeft)
           } else {
-            if(op.precedence < opRight.precedence) {
+            if (op.precedence < opRight.precedence) {
               MoreToDo(stepRight.stepRight)
             } else {
-              BinaryExpression.create(expLeft, op, expRight) match {
-                case Left(message) => Failure(this, Seq(Issue(message, posLeft, Issue.Analysis, isFatal = true)))
-                case Right(expression) =>
-                  MoreToDo(TokenCursor(
-                    tokensBefore = tokensBefore.dropRight(1),
-                    currentToken = ExpressionToken(expression.asString, posLeft, expression),
-                    tokensAfter = tokensAfter.tail
-                  ))
-              }
+              createBinaryExpression(expLeft, op, expRight, posLeft)
             }
           }
+        case
+          (Some(BinaryOperatorToken(_, _, opLeft)), Some(ExpressionToken(_, posLeft, expLeft)),
+          BinaryOperatorToken(_, _, op), Some(ExpressionToken(_, _, expRight)), _) =>
+          if (opLeft.precedence >= op.precedence) {
+            MoreToDo(stepLeft.stepLeft)
+          } else {
+            createBinaryExpression(expLeft, op, expRight, posLeft)
+          }
+        case
+          (_, Some(ExpressionToken(_, posLeft, expLeft)), BinaryOperatorToken(_, _, op),
+          Some(ExpressionToken(_, _, expRight)), Some(BinaryOperatorToken(_, _, opRight))) =>
+          if (op.precedence < opRight.precedence) {
+            MoreToDo(stepRight.stepRight)
+          } else {
+            createBinaryExpression(expLeft, op, expRight, posLeft)
+          }
+        case
+          (_, Some(ExpressionToken(_, posLeft, expLeft)), BinaryOperatorToken(_, _, op),
+          Some(ExpressionToken(_, _, expRight)), _) =>
+          createBinaryExpression(expLeft, op, expRight, posLeft)
+        case (_, _, _, _, _) =>
+          val tokensAsString = s"$tokenLeftLeftOpt $tokenLeftOpt $currentToken $tokenRightOpt $tokenRightRightOpt"
+          val message = s"Don't know what to do with token sequence $tokensAsString"
+          Failure(this, Seq(Issue(message, currentToken.pos, Issue.Analysis, isFatal = true)))
       }
     }
 
   }
 
-  object TokenCursor{
+  object TokenCursor {
+
+    def apply(tokens: Seq[Token]): TokenCursor = TokenCursor(Seq.empty, tokens.head, tokens.tail)
+
     trait Status
+
     case class Failure(tokenCursor: TokenCursor, issues: Seq[Issue]) extends Status
+
     case class GotNumericExpression(expression: Expression[Double]) extends Status
+
     case class GotLogicalExpression(expression: Expression[Boolean]) extends Status
+
     case class MoreToDo(tokenCursor: TokenCursor) extends Status
+
   }
 
   def analyze(tokens: Seq[Token]): AnalysisResult = {
-    ???
+    var cursor: TokenCursor = TokenCursor(tokens)
+    var resultOpt: Option[AnalysisResult] = None
+    while (resultOpt.isEmpty) {
+      cursor.step match {
+        case Failure(tokenCursor, issues) => resultOpt = Some(AnalysisFailure(tokenCursor, issues))
+        case GotLogicalExpression(expression) => resultOpt = Some(AnalysisGotLogicalExpression(expression))
+        case GotNumericExpression(expression) => resultOpt = Some(AnalysisGotNumericalExpression(expression))
+        case MoreToDo(cursorNew) => cursor = cursorNew
+      }
+    }
+    resultOpt.get
   }
 
 }
