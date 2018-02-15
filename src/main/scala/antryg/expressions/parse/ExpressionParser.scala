@@ -1,12 +1,14 @@
 package antryg.expressions.parse
 
+import antryg.expressions.logical.BooleanExpression
+import antryg.expressions.numeric.NumericExpression
 import antryg.expressions.{BinaryOperator, Expression}
 import antryg.expressions.parse.ExpressionParser.Issue.Stage
 import antryg.expressions.parse.ExpressionParser.{ParseFailedAnalysis, ParseFailedTokenizing, ParseGotLogicalExpression, ParseGotNumericalExpression, ParseResult}
 import antryg.expressions.parse.ExpressionTokenAnalyzer.{AnalysisFailure, AnalysisGotLogicalExpression, AnalysisGotNumericalExpression, TokenCursor}
 import antryg.expressions.parse.ExpressionTokenizer.Token
 
-case class ExpressionParser(symbols: ExpressionSymbols) {
+case class ExpressionParser(symbols: ExpressionSymbols = ExpressionSymbols.default) {
 
   val tokenizer: ExpressionTokenizer = ExpressionTokenizer(symbols)
   val analyzer: ExpressionTokenAnalyzer.type = ExpressionTokenAnalyzer
@@ -71,8 +73,8 @@ object ExpressionParser {
     def expression: Expression.Base
   }
 
-  case class ParseGotLogicalExpression(expression: Expression[Boolean]) extends ParseSuccess
+  case class ParseGotLogicalExpression(expression: BooleanExpression) extends ParseSuccess
 
-  case class ParseGotNumericalExpression(expression: Expression[Double]) extends ParseSuccess
+  case class ParseGotNumericalExpression(expression: NumericExpression) extends ParseSuccess
 
 }

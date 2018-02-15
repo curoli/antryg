@@ -10,7 +10,7 @@ case class NumericVariable(name: String) extends Variable[Double] with NumericEx
 
   override def booleanVariables: Set[BooleanVariable] = Set.empty
 
-  override def bindNumber(varName: String, value: Double): Expression[Double] =
+  override def bindNumber(varName: String, value: Double): NumericExpression =
     if(varName == name) {
       NumericConstant(value)
     } else {
@@ -19,7 +19,7 @@ case class NumericVariable(name: String) extends Variable[Double] with NumericEx
 
   override def bindBoolean(varName: String, value: Boolean): NumericVariable = this
 
-  override def bind(numberValues: Map[String, Double], booleanValues: Map[String, Boolean]): Expression[Double] =
+  override def bind(numberValues: Map[String, Double], booleanValues: Map[String, Boolean]): NumericExpression =
     numberValues.get(name) match {
       case Some(value) => NumericConstant(value)
       case None => this

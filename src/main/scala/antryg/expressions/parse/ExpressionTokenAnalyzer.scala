@@ -1,5 +1,7 @@
 package antryg.expressions.parse
 
+import antryg.expressions.logical.BooleanExpression
+import antryg.expressions.numeric.NumericExpression
 import antryg.expressions.{BinaryExpression, BinaryOperator, Expression}
 import antryg.expressions.parse.ExpressionParser.Issue
 import antryg.expressions.parse.ExpressionTokenAnalyzer.TokenCursor.{Failure, GotLogicalExpression, GotNumericExpression, MoreToDo}
@@ -11,9 +13,9 @@ object ExpressionTokenAnalyzer {
 
   case class AnalysisFailure(tokenCursor: TokenCursor, issues: Seq[Issue]) extends AnalysisResult
 
-  case class AnalysisGotLogicalExpression(expression: Expression[Boolean]) extends AnalysisResult
+  case class AnalysisGotLogicalExpression(expression: BooleanExpression) extends AnalysisResult
 
-  case class AnalysisGotNumericalExpression(expression: Expression[Double]) extends AnalysisResult
+  case class AnalysisGotNumericalExpression(expression: NumericExpression) extends AnalysisResult
 
   case class TokenCursor(tokensBefore: Seq[Token], currentToken: Token, tokensAfter: Seq[Token]) {
     def pos: Int = tokensBefore.size
@@ -73,8 +75,8 @@ object ExpressionTokenAnalyzer {
       (tokenLeftLeftOpt, tokenLeftOpt, currentToken, tokenRightOpt, tokenRightRightOpt) match {
         case (None, None, ExpressionToken(_, _, expression), None, None) =>
           expression.theType match {
-            case Expression.Numeric => GotNumericExpression(expression.asInstanceOf[Expression[Double]])
-            case Expression.Logical => GotLogicalExpression(expression.asInstanceOf[Expression[Boolean]])
+            case Expression.Numeric => GotNumericExpression(expression.asInstanceOf[NumericExpression])
+            case Expression.Logical => GotLogicalExpression(expression.asInstanceOf[BooleanExpression])
           }
         case (None, None, token: Token, None, None) =>
           val issue = Issue(Issue.Messages.notAnExpressionAtEnd, token.pos, Issue.Analysis, isFatal = true)
@@ -142,9 +144,9 @@ object ExpressionTokenAnalyzer {
 
     case class Failure(tokenCursor: TokenCursor, issues: Seq[Issue]) extends Status
 
-    case class GotNumericExpression(expression: Expression[Double]) extends Status
+    case class GotNumericExpression(expression: NumericExpression) extends Status
 
-    case class GotLogicalExpression(expression: Expression[Boolean]) extends Status
+    case class GotLogicalExpression(expression: BooleanExpression) extends Status
 
     case class MoreToDo(tokenCursor: TokenCursor) extends Status
 
