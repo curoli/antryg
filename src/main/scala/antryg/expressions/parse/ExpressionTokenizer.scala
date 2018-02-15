@@ -25,14 +25,14 @@ case class ExpressionTokenizer(symbols: ExpressionSymbols) {
           depth -= 1
           if(depth < 0) {
             issues :+=
-              Issue("Closing bracket with no matching opening bracket", pos, Issue.Tokenization, isFatal = true)
+              Issue(Issue.Messages.closingBracketWithoutOpening, pos, Issue.Tokenization, isFatal = true)
           }
         case _ => ()
       }
     }
     if(depth > 0) {
       issues :+=
-        Issue("Opening bracket with no matching closing bracket", lastOpeningBracketPos, Issue.Tokenization,
+        Issue(Issue.Messages.openingBracketWithoutClosing, lastOpeningBracketPos, Issue.Tokenization,
           isFatal = true)
     }
     issues
@@ -44,7 +44,7 @@ case class ExpressionTokenizer(symbols: ExpressionSymbols) {
     var possibleNextTypes: Set[TokenType] = TokenType.possibleStartTokens
     var issues: Seq[Issue] = Seq.empty
     if (remainder.isEmpty) {
-      issues :+= Issue("string is empty", 0, Issue.Tokenization, isFatal = true)
+      issues :+= Issue(Issue.Messages.stringIsEmpty, 0, Issue.Tokenization, isFatal = true)
     }
     while (issues.isEmpty && remainder.nonEmpty) {
       val pos = string.size - remainder.size
@@ -57,7 +57,7 @@ case class ExpressionTokenizer(symbols: ExpressionSymbols) {
         remainder = bestResult.remainder.trim
         possibleNextTypes = token.tokenType.canBeSucceededBy
       } else {
-        issues :+= Issue("Cannot identify next token.", pos, Issue.Tokenization, isFatal = true)
+        issues :+= Issue(Issue.Messages.cannotIdentifyNextToken, pos, Issue.Tokenization, isFatal = true)
       }
     }
     issues ++= checkBrackets(tokens)

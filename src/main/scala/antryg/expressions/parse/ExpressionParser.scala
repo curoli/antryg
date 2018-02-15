@@ -1,9 +1,10 @@
 package antryg.expressions.parse
 
-import antryg.expressions.Expression
+import antryg.expressions.{BinaryOperator, Expression}
 import antryg.expressions.parse.ExpressionParser.Issue.Stage
-import antryg.expressions.parse.ExpressionParser.{Issue, ParseFailedAnalysis, ParseFailedTokenizing, ParseGotLogicalExpression, ParseGotNumericalExpression, ParseResult}
+import antryg.expressions.parse.ExpressionParser.{ParseFailedAnalysis, ParseFailedTokenizing, ParseGotLogicalExpression, ParseGotNumericalExpression, ParseResult}
 import antryg.expressions.parse.ExpressionTokenAnalyzer.{AnalysisFailure, AnalysisGotLogicalExpression, AnalysisGotNumericalExpression, TokenCursor}
+import antryg.expressions.parse.ExpressionTokenizer.Token
 
 case class ExpressionParser(symbols: ExpressionSymbols) {
 
@@ -36,6 +37,20 @@ object ExpressionParser {
     case object Tokenization extends Stage
 
     case object Analysis extends Stage
+
+    object Messages {
+      val notAnExpressionAtEnd = "Did not end up with an expression"
+      val closingBracketWithoutOpening = "Closing bracket with no matching opening bracket"
+      val openingBracketWithoutClosing = "Opening bracket with no matching closing bracket"
+      val stringIsEmpty = "String is empty"
+      val cannotIdentifyNextToken = "Cannot identify next token"
+      def lhsWrongType(lhsType: Expression.Type, op: BinaryOperator.Base): String =
+        s"Left expression has type $lhsType, but operator ${op.symbol} needs ${op.lhsType}"
+      def rhsWrongType(rhsType: Expression.Type, op: BinaryOperator.Base): String =
+        s"Right expression has type $rhsType, but operator ${op.symbol} needs ${op.rhsType}"
+      def cannotAnalyzeTokenSequence(tokens: Seq[Token]): String =
+        s"Don't know what to do with token sequence (${tokens.mkString(", ")})."
+    }
 
   }
 

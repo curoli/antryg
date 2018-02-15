@@ -77,7 +77,7 @@ object ExpressionTokenAnalyzer {
             case Expression.Logical => GotLogicalExpression(expression.asInstanceOf[Expression[Boolean]])
           }
         case (None, None, token: Token, None, None) =>
-          val issue = Issue("Did not end up with an expression", token.pos, Issue.Analysis, isFatal = true)
+          val issue = Issue(Issue.Messages.notAnExpressionAtEnd, token.pos, Issue.Analysis, isFatal = true)
           Failure(this, Seq(issue))
         case (_, _, CloseBracket(_, _), _, _) => MoreToDo(stepLeft)
         case (_, _, OpenBracket(_, _), _, _) => MoreToDo(stepRight)
@@ -125,8 +125,9 @@ object ExpressionTokenAnalyzer {
           Some(ExpressionToken(_, _, expRight)), _) =>
           createBinaryExpression(expLeft, op, expRight, posLeft)
         case (_, _, _, _, _) =>
-          val tokensAsString = s"$tokenLeftLeftOpt $tokenLeftOpt $currentToken $tokenRightOpt $tokenRightRightOpt"
-          val message = s"Don't know what to do with token sequence $tokensAsString"
+          val rogueTokens =
+            Seq(tokenLeftLeftOpt, tokenLeftOpt, Some(currentToken), tokenRightOpt, tokenRightRightOpt).flatten
+          val message = Issue.Messages.cannotAnalyzeTokenSequence(rogueTokens)
           Failure(this, Seq(Issue(message, currentToken.pos, Issue.Analysis, isFatal = true)))
       }
     }
