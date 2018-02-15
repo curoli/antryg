@@ -3,9 +3,7 @@ package antryg.expressions.numeric
 import antryg.expressions.{Expression, Variable}
 import antryg.expressions.logical.BooleanVariable
 
-case class NumericVariable(name: String) extends Variable[Double] {
-  override def theType: Expression.Type = Expression.Numeric
-
+case class NumericVariable(name: String) extends Variable[Double] with NumericExpression {
   override def variables: Set[Variable[_]] = Set[Variable[_]](this)
 
   override def numericVariables: Set[NumericVariable] = Set[NumericVariable](this)

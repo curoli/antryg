@@ -44,10 +44,13 @@ object ExpressionParser {
       val openingBracketWithoutClosing = "Opening bracket with no matching closing bracket"
       val stringIsEmpty = "String is empty"
       val cannotIdentifyNextToken = "Cannot identify next token"
+
       def lhsWrongType(lhsType: Expression.Type, op: BinaryOperator.Base): String =
         s"Left expression has type $lhsType, but operator ${op.symbol} needs ${op.lhsType}"
+
       def rhsWrongType(rhsType: Expression.Type, op: BinaryOperator.Base): String =
         s"Right expression has type $rhsType, but operator ${op.symbol} needs ${op.rhsType}"
+
       def cannotAnalyzeTokenSequence(tokens: Seq[Token]): String =
         s"Don't know what to do with token sequence (${tokens.mkString(", ")})."
     }

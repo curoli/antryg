@@ -3,9 +3,7 @@ package antryg.expressions.numeric
 import antryg.expressions.logical.BooleanVariable
 import antryg.expressions.{Constant, Expression, Variable}
 
-case class NumericConstant(value: Double) extends Constant[Double] {
-  override def theType: Expression.Type = Expression.Numeric
-
+case class NumericConstant(value: Double) extends Constant[Double] with NumericExpression {
   override def variables: Set[Variable[_]] = Set.empty
 
   override def numericVariables: Set[NumericVariable] = Set.empty
