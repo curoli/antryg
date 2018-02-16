@@ -84,8 +84,8 @@ object BinaryExpression {
       copy(lhs = lhs.bind(numberValues, booleanValues), rhs = rhs.bind(numberValues, booleanValues))
   }
 
-  case class NumericalComparisonExpression(rhs: NumericExpression, op: NumericalComparisonOperator,
-                                           lhs: NumericExpression)
+  case class NumericalComparisonExpression(lhs: NumericExpression, op: NumericalComparisonOperator,
+                                           rhs: NumericExpression)
     extends BinaryExpression[Double, Double, Boolean] with BooleanExpression {
     override def bindNumber(varName: String, value: Double): NumericalComparisonExpression =
       copy(lhs = lhs.bindNumber(varName, value), rhs = rhs.bindNumber(varName, value))
