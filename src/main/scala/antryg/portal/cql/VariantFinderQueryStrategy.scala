@@ -34,7 +34,7 @@ object VariantFinderQueryStrategy {
     val filterSimplified = ConstantPropagator.transformBoolean(filter)
     val potentialClauses = extractClauses(filterSimplified)
     valueName(potentialClauses) match {
-      case left: Left[String, VariantFinderQueryPlan] => left
+      case Left(message) => Left(message)
       case Right(valueName) =>
         val clauses = getClausesForVariantIndex(valueName, potentialClauses)
         Right(VariantFinderQueryPlan(valueName, clauses, filter))
