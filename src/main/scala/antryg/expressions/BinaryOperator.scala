@@ -16,6 +16,10 @@ trait BinaryOperator[L, R, +T] extends ((L, R) => T) with BinaryOperator.Base {
   override def toString: String = symbol
 }
 
+trait ReversibleOperator[L, R, +T] extends BinaryOperator[L, R, T] {
+  def reverted: ReversibleOperator[R, L, T]
+}
+
 object BinaryOperator {
 
   trait Base {
@@ -41,7 +45,7 @@ object BinaryOperator {
     val andOr = 2
   }
 
-  trait ArithmeticOperator extends BinaryOperator[Double, Double, Double] {
+  sealed trait ArithmeticOperator extends BinaryOperator[Double, Double, Double] {
     override def theType: Expression.Type = Expression.Numeric
 
     override def lhsType: Expression.Type = Expression.Numeric
@@ -49,13 +53,20 @@ object BinaryOperator {
     override def rhsType: Expression.Type = Expression.Numeric
   }
 
+  sealed trait ReversibleArithmeticOperator
+    extends ArithmeticOperator with ReversibleOperator[Double, Double, Double] {
+    override def reverted: ReversibleArithmeticOperator
+  }
+
   object ArithmeticOperator {
-    val times: ArithmeticOperator = new ArithmeticOperator {
+    val times: ArithmeticOperator = new ReversibleArithmeticOperator {
       override def symbol: String = "*"
 
       override def apply(lhs: Double, rhs: Double): Double = lhs * rhs
 
       override def precedence: Int = Precedences.timesDivideBy
+
+      override def reverted: ReversibleArithmeticOperator = this
     }
     val dividedBy: ArithmeticOperator = new ArithmeticOperator {
       override def symbol: String = "/"
@@ -64,12 +75,14 @@ object BinaryOperator {
 
       override def precedence: Int = Precedences.timesDivideBy
     }
-    val plus: ArithmeticOperator = new ArithmeticOperator {
+    val plus: ArithmeticOperator = new ReversibleArithmeticOperator {
       override def symbol: String = "+"
 
       override def apply(lhs: Double, rhs: Double): Double = lhs + rhs
 
       override def precedence: Int = Precedences.plusMinus
+
+      override def reverted: ReversibleArithmeticOperator = this
     }
     val minus: ArithmeticOperator = new ArithmeticOperator {
       override def symbol: String = "-"
@@ -80,7 +93,7 @@ object BinaryOperator {
     }
   }
 
-  trait BooleanOperator extends BinaryOperator[Boolean, Boolean, Boolean] {
+  trait BooleanOperator extends ReversibleOperator[Boolean, Boolean, Boolean] {
     override def theType: Expression.Type = Expression.Logical
 
     override def lhsType: Expression.Type = Expression.Logical
@@ -88,6 +101,8 @@ object BinaryOperator {
     override def rhsType: Expression.Type = Expression.Logical
 
     override def precedence: Int = Precedences.andOr
+
+    override def reverted: BooleanOperator
   }
 
   object BooleanOperator {
@@ -95,15 +110,19 @@ object BinaryOperator {
       override def symbol: String = "&"
 
       override def apply(lhs: Boolean, rhs: Boolean): Boolean = lhs && rhs
+
+      override def reverted: BooleanOperator = this
     }
     val or: BooleanOperator = new BooleanOperator {
       override def symbol: String = "|"
 
       override def apply(lhs: Boolean, rhs: Boolean): Boolean = lhs || rhs
+
+      override def reverted: BooleanOperator = this
     }
   }
 
-  trait NumericalComparisonOperator extends BinaryOperator[Double, Double, Boolean] {
+  trait NumericalComparisonOperator extends ReversibleOperator[Double, Double, Boolean] {
     override def theType: Expression.Type = Expression.Logical
 
     override def lhsType: Expression.Type = Expression.Numeric
@@ -111,6 +130,8 @@ object BinaryOperator {
     override def rhsType: Expression.Type = Expression.Numeric
 
     override def precedence: Int = Precedences.comparison
+
+    override def reverted: NumericalComparisonOperator
   }
 
   object NumericalComparisonOperator {
@@ -118,26 +139,36 @@ object BinaryOperator {
       override def symbol: String = "="
 
       override def apply(lhs: Double, rhs: Double): Boolean = lhs == rhs
+
+      override def reverted: NumericalComparisonOperator = this
     }
     val lessThan: NumericalComparisonOperator = new NumericalComparisonOperator {
       override def symbol: String = "<"
 
       override def apply(lhs: Double, rhs: Double): Boolean = lhs < rhs
+
+      override def reverted: NumericalComparisonOperator = greaterThan
     }
     val lessOrEqual: NumericalComparisonOperator = new NumericalComparisonOperator {
       override def symbol: String = "<="
 
       override def apply(lhs: Double, rhs: Double): Boolean = lhs <= rhs
+
+      override def reverted: NumericalComparisonOperator = greaterOrEqual
     }
     val greaterThan: NumericalComparisonOperator = new NumericalComparisonOperator {
       override def symbol: String = ">"
 
       override def apply(lhs: Double, rhs: Double): Boolean = lhs > rhs
+
+      override def reverted: NumericalComparisonOperator = lessThan
     }
     val greaterOrEqual: NumericalComparisonOperator = new NumericalComparisonOperator {
       override def symbol: String = ">="
 
       override def apply(lhs: Double, rhs: Double): Boolean = lhs >= rhs
+
+      override def reverted: NumericalComparisonOperator = lessOrEqual
     }
   }
 
