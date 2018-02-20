@@ -9,6 +9,7 @@ lazy val Versions = new {
   val ScalikeJDBC = "3.1.0"
   val MySQLConnector = "8.0.8-dmr"
   val DataStaxJavaCassandraDriver = "3.3.2"
+  val FastParse = "1.0.0"
 }
 
 lazy val mainDeps = Seq(
@@ -17,7 +18,8 @@ lazy val mainDeps = Seq(
   "ch.qos.logback" % "logback-classic" % Versions.LogBack,
   "org.scalikejdbc" %% "scalikejdbc" % Versions.ScalikeJDBC,
   "mysql" % "mysql-connector-java" % Versions.MySQLConnector,
-  "com.datastax.cassandra" % "cassandra-driver-core" % Versions.DataStaxJavaCassandraDriver
+  "com.datastax.cassandra" % "cassandra-driver-core" % Versions.DataStaxJavaCassandraDriver,
+  "com.lihaoyi" %% "fastparse" % Versions.FastParse
 )
 
 lazy val testDeps = Seq(
