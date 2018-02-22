@@ -30,6 +30,8 @@ case class ExpressionParser(symbols: ExpressionSymbols = ExpressionSymbols.defau
 
 object ExpressionParser {
 
+  def default: ExpressionParser = ExpressionParser()
+
   case class Issue(message: String, pos: Int, stage: Stage, isFatal: Boolean)
 
   object Issue {
