@@ -18,8 +18,7 @@ lazy val mainDeps = Seq(
   "ch.qos.logback" % "logback-classic" % Versions.LogBack,
   "org.scalikejdbc" %% "scalikejdbc" % Versions.ScalikeJDBC,
   "mysql" % "mysql-connector-java" % Versions.MySQLConnector,
-  "com.datastax.cassandra" % "cassandra-driver-core" % Versions.DataStaxJavaCassandraDriver,
-  "com.lihaoyi" %% "fastparse" % Versions.FastParse
+  "com.datastax.cassandra" % "cassandra-driver-core" % Versions.DataStaxJavaCassandraDriver
 )
 
 lazy val testDeps = Seq(
