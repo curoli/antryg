@@ -14,7 +14,7 @@ def parse(string: String): Either[String, KpqlQuery] = {
     if(preQMarkSplitByAt.size != 2) {
       Left("Query needs to contain exactly one '@'.")
     } else {
-      val phenotype = preQMarkSplitByAt(0)
+      val phenotype = preQMarkSplitByAt(0).trim
       val datasets = preQMarkSplitByAt(1).split(",").map(_.trim).filter(_.nonEmpty).toSeq
       val expressionString = splitByQMark(1)
       ExpressionParser.default.parse(expressionString) match {
