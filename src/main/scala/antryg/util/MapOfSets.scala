@@ -1,6 +1,6 @@
 package antryg.util
 
-object MapsOfSets {
+object MapOfSets {
 
   def fromMaps[K, V](maps: Iterable[Map[K, V]]): Map[K, Set[V]] = {
     val keys = maps.map(_.keySet).fold(Set.empty)(_ ++ _)
