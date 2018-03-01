@@ -22,4 +22,11 @@ object MapOfSets {
     keys.map(key => (key, map1(key).intersect(map2(key)))).filter(_._2.nonEmpty).toMap
   }
 
+  def explode[K, V](map: Map[K, Set[V]]): Set[Map[K, V]] = {
+    val (keySeq, valuesSeq) = map.toSeq.unzip
+    Combinator.combinations(valuesSeq).map(valuesSeq => keySeq.zip(valuesSeq).toMap)
+  }
+
+  def mix[K, V](maps: Iterable[Map[K, V]]): Set[Map[K, V]] = explode(fromMaps(maps))
+
 }
