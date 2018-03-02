@@ -37,4 +37,35 @@ class MapOfSetsTest extends FunSuite {
     assert(mapOfUnions === expectedMapOfUnions)
   }
 
+  test("explode") {
+    val map = Map(1 -> Set(1, 2), 2 -> Set(3, 4, 5), 3 -> Set(6, 7))
+    val exploded = MapOfSets.explode(map)
+    val expectedExploded =
+      Set(Map(1 -> 1, 2 -> 3, 3 -> 6), Map(1 -> 1, 2 -> 3, 3 -> 7),
+        Map(1 -> 1, 2 -> 4, 3 -> 6), Map(1 -> 1, 2 -> 4, 3 -> 7),
+        Map(1 -> 1, 2 -> 5, 3 -> 6), Map(1 -> 1, 2 -> 5, 3 -> 7),
+        Map(1 -> 2, 2 -> 3, 3 -> 6), Map(1 -> 2, 2 -> 3, 3 -> 7),
+        Map(1 -> 2, 2 -> 4, 3 -> 6), Map(1 -> 2, 2 -> 4, 3 -> 7),
+        Map(1 -> 2, 2 -> 5, 3 -> 6), Map(1 -> 2, 2 -> 5, 3 -> 7)
+      )
+    assert(exploded === expectedExploded)
+  }
+
+  test("mix") {
+    val maps = Set(Map(1 -> 2, 2 -> 3, 3 -> 4, 4 -> 5), Map(1 -> 6, 2 -> 7, 3 -> 8, 10 -> 20))
+    val mixedMaps = MapOfSets.mix(maps)
+    val expectedMixedMaps =
+      Set(
+        Map(1 -> 2, 2 -> 3, 3 -> 4, 4 -> 5, 10 -> 20),
+        Map(1 -> 2, 2 -> 3, 3 -> 8, 4 -> 5, 10 -> 20),
+        Map(1 -> 2, 2 -> 7, 3 -> 4, 4 -> 5, 10 -> 20),
+        Map(1 -> 2, 2 -> 7, 3 -> 8, 4 -> 5, 10 -> 20),
+        Map(1 -> 6, 2 -> 3, 3 -> 4, 4 -> 5, 10 -> 20),
+        Map(1 -> 6, 2 -> 3, 3 -> 8, 4 -> 5, 10 -> 20),
+        Map(1 -> 6, 2 -> 7, 3 -> 4, 4 -> 5, 10 -> 20),
+        Map(1 -> 6, 2 -> 7, 3 -> 8, 4 -> 5, 10 -> 20)
+      )
+    assert(mixedMaps === expectedMixedMaps)
+  }
+
 }

@@ -2,6 +2,7 @@ package antryg.util
 
 object Combinator {
 
+  /* Returns all possible combinations with one element from each input set. */
   def combinations[V](seqs: Seq[Set[V]]): Set[Seq[V]] = {
     if(seqs.isEmpty) {
       Set.empty
