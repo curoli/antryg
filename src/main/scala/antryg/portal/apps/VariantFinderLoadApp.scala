@@ -2,9 +2,12 @@ package antryg.portal.apps
 
 import antryg.cql.CqlSessionFactory
 import antryg.cql.builder.Replication
+import antryg.expressions.logical.BooleanExpression
 import antryg.expressions.parse.ExpressionParser
 import antryg.expressions.parse.ExpressionParser.{ParseFailure, ParseGotLogicalExpression, ParseGotNumericalExpression}
-import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QueryFilter, QuerySimpleRange, QueryVariantCohort, ShowTables, ShowVersions}
+import antryg.kpql.KpqlQuery
+import antryg.kpql.parse.KpqlParser
+import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QueryFilter, QueryKpql, QuerySimpleRange, QueryVariantCohort, ShowTables, ShowVersions}
 import antryg.portal.cql.VariantFinderFacade
 import antryg.portal.sql.PortalSqlQueries.CohortPhenoTableInfo
 import antryg.portal.sqltocql.{VariantFinderLoader, VariantIdSampler}
@@ -58,7 +61,9 @@ object VariantFinderLoadApp extends App {
 
     case class QueryVariantCohort(cohort: String, phenotype: String, variantIds: Seq[String]) extends MenuChoice
 
-    case class QueryFilter(cohort: String, phenotype: String, filterString: String) extends MenuChoice
+    case class QueryFilter(cohort: String, phenotype: String, filter: BooleanExpression) extends MenuChoice
+
+    case class QueryKpql(kpqlQuery: KpqlQuery) extends MenuChoice
 
     case object PrintHelp extends MenuChoice
 
@@ -152,13 +157,31 @@ object VariantFinderLoadApp extends App {
                     Right(QueryVariantCohort(cohort, phenotype, variantIds))
                   }
                 case "filter" =>
-                  if(args.size < 5) {
+                  if (args.size < 5) {
                     Left("Need to specify cohort, phenotype and filter expression")
                   } else {
                     val cohort = args(2)
                     val phenotype = args(3)
                     val filterString = args.toSeq.drop(4).mkString(" ")
-                    Right(QueryFilter(cohort, phenotype, filterString))
+                    val parser = ExpressionParser()
+                    parser.parse(filterString) match {
+                      case parseFailure: ParseFailure =>
+                        Left(parseFailure.issues.mkString("/n", "/n", "/n"))
+                      case ParseGotNumericalExpression(_) =>
+                        Left("Got numerical expression, but need boolean expression.")
+                      case ParseGotLogicalExpression(filter) =>
+                        Right(QueryFilter(cohort, phenotype, filter))
+                    }
+                  }
+                case "kpql" =>
+                  if (args.size < 3) {
+                    Left("Need to specify KPQL string.")
+                  } else {
+                    val kpqlString = args.toSeq.drop(2).mkString(" ")
+                    KpqlParser.parse(kpqlString) match {
+                      case Left(message) => Left(message)
+                      case Right(kpqlQuery) => Right(QueryKpql(kpqlQuery))
+                    }
                   }
                 case _ => Left(s"Do not know how to do query '$queryType'")
               }
@@ -206,22 +229,18 @@ object VariantFinderLoadApp extends App {
           val variantCohortIter =
             variantFinderFacade.selectVariantsCoreCohortData(variantIds.iterator, cohort, phenotype)
           variantCohortIter.foreach(println)
-        case QueryFilter(cohort, phenotype, filterString) =>
-          val parser = ExpressionParser()
-          parser.parse(filterString) match {
-            case parseFailure: ParseFailure => println(parseFailure.issues.mkString("/n", "/n", "/n"))
-            case ParseGotNumericalExpression(_) => println("Got numerical expression, but need boolean expression.")
-            case ParseGotLogicalExpression(filter) =>
-              println(filter)
-              val messageOrVariantDataIter = variantFinderFacade.selectVariantsByExpression(cohort, phenotype, filter)
-              messageOrVariantDataIter match {
-                case Left(message) => println(message)
-                case Right(variantDataIter) =>
-                  for(variantData <- variantDataIter) {
-                    println(variantData)
-                  }
+        case QueryFilter(cohort, phenotype, filter) =>
+          val messageOrVariantDataIter = variantFinderFacade.selectVariantsByExpression(cohort, phenotype, filter)
+          messageOrVariantDataIter match {
+            case Left(message) => println(message)
+            case Right(variantDataIter) =>
+              for (variantData <- variantDataIter) {
+                println(variantData)
               }
           }
+        case QueryKpql(kpqlQuery) =>
+          println("KPQL queries are not yet implemented.")
+          println(kpqlQuery)
         case PrintHelp => printHelp()
       }
       sqlDb.close()
