@@ -7,7 +7,8 @@ import antryg.cql.facade.{CqlTableFacade, KeyspaceFacade}
 import VariantFinderSchema.Cols
 import antryg.cql.builder.Select.Clause
 import antryg.expressions.logical.BooleanExpression
-import antryg.portal.cql.VariantFinderFacade.{RowToVariantCoreCohortData, VariantCohortData, VariantCoreCohortData, VariantCoreCohortDataFilter, VariantCoreData}
+import antryg.kpql.KpqlQuery
+import antryg.portal.cql.VariantFinderFacade.{RowToVariantCoreCohortData, VariantCohortData, VariantCoreCohortData, VariantCoreCohortDataFilter, VariantCoreData, VariantKpqlData}
 import com.datastax.driver.core.{DataType, Row}
 import com.datastax.driver.core.exceptions.InvalidQueryException
 
@@ -112,6 +113,10 @@ class VariantFinderFacade(val session: CqlSession, replication: Replication) {
     }
   }
 
+  def selectVariantsKpql(kpqlQuery: KpqlQuery): Either[String, Iterator[VariantKpqlData]] = {
+    Left("KPQL queries are not yet implemented.")
+  }
+
 }
 
 object VariantFinderFacade {
@@ -122,6 +127,9 @@ object VariantFinderFacade {
 
   case class VariantCoreCohortData(variantId: String, chromosome: String, position: Long,
                                    cohort: String, phenotype: String, values: Map[String, Double])
+
+  case class VariantKpqlData(variantId: String, chromosome: String, position: Long, phenotype: String,
+                             valuesByDataset: Map[String, Map[String, Double]])
 
   def getCohortPhenoCol(cohort: String, phenotype: String): CqlCol =
     CqlCol(s"dataset_${cohort}__${phenotype}", DataType.map(DataType.text, DataType.cdouble()))

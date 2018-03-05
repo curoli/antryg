@@ -7,7 +7,7 @@ import antryg.expressions.parse.ExpressionParser
 import antryg.expressions.parse.ExpressionParser.{ParseFailure, ParseGotLogicalExpression, ParseGotNumericalExpression}
 import antryg.kpql.KpqlQuery
 import antryg.kpql.parse.KpqlParser
-import antryg.portal.apps.VariantFinderLoadApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QueryFilter, QueryKpql, QuerySimpleRange, QueryVariantCohort, ShowTables, ShowVersions}
+import antryg.portal.apps.VariantFinderApp.MenuChoice.{InfoTable, LoadCohort, LoadCore, PrintHelp, QueryFilter, QueryKpql, QuerySimpleRange, QueryVariantCohort, ShowTables, ShowVersions}
 import antryg.portal.cql.VariantFinderFacade
 import antryg.portal.sql.PortalSqlQueries.CohortPhenoTableInfo
 import antryg.portal.sqltocql.{VariantFinderLoader, VariantIdSampler}
@@ -15,7 +15,7 @@ import antryg.sql.SqlDb
 
 import scala.util.{Failure, Success, Try}
 
-object VariantFinderLoadApp extends App {
+object VariantFinderApp extends App {
 
   def printHelp(): Unit = {
     println(
@@ -28,6 +28,8 @@ object VariantFinderLoadApp extends App {
          |  query simplerange <cohort> <phenotype> <valueName> <min> <max> (finds all variants for value
          |                                                                  within range)
          |  query cohortvariants <cohort> <phenotype> <variantId>*  (look up cohort data for variants)
+         |  query filter <cohort> <phenotype> <filter>   (look up variant data using filter expression)
+         |  query kpql <kpql>   (execute KPQL query)
          |  help   (display usage)
       """.stripMargin)
   }
@@ -239,8 +241,14 @@ object VariantFinderLoadApp extends App {
               }
           }
         case QueryKpql(kpqlQuery) =>
-          println("KPQL queries are not yet implemented.")
-          println(kpqlQuery)
+          val messageOrVariantDataIter = variantFinderFacade.selectVariantsKpql(kpqlQuery)
+          messageOrVariantDataIter match {
+            case Left(message) => println(message)
+            case Right(variantDataIter) =>
+              for (variantData <- variantDataIter) {
+                println(variantData)
+              }
+          }
         case PrintHelp => printHelp()
       }
       sqlDb.close()
